@@ -188,3 +188,11 @@
 \newcommand{\CommentLine}[1]{ \State $\triangleright  \textit{#1}$ }
 
 \MakeRobust{\Call}
+
+% Fix LLNCS:
+% https://tex.stackexchange.com/questions/272200/table-of-contents-showing-the-title-as-only-entry-latex
+\setcounter{tocdepth}{2}
+\makeatletter
+\renewcommand*\l@author[2]{}
+\renewcommand*\l@title[2]{}
+\makeatletter
