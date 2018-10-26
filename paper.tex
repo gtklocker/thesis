@@ -1,0 +1,138 @@
+\documentclass[11pt]{llncs}
+\usepackage{preamble}
+
+\begin{document}
+\title{Constructing interoperable blockchains using NIPoPoWs}
+\date{\today}
+\author{Kostis Karantias\\
+    \email{cse32454@cse.uoi.gr}}
+\institute{University of Ioannina}
+\maketitle
+\noindent
+\makebox[\linewidth]{\small \today}
+
+\thispagestyle{plain}
+
+\section*{Exercise 1}
+We'll use the $ccw$ of the 3 points to determine on which half-plane $p$ lies.
+In order to do that we have to be certain that $q1$ and $q2$ are $x$-ordered.
+Our new ordered points are $a$ and $b$. Then we very simply calculate the ccw
+of $a$, $b$, and $p$.
+
+\section*{Exercise 2}
+\subsection*{(a)}
+\begin{lemma}
+The maximum number of non-convex angles of any simple polygon is $n-3$.
+\end{lemma}
+\begin{proof}
+Next we show that it's impossible to have more than $n-3$ non-convex angles. We
+know that any simple polygon can be triangulated into $n-2$ triangles. This
+means that an upper bound on the sum of the interior angles of any
+polygon is $(n-2) * \pi$. By the pigeonhole principle, it follows that
+there can't be more than $n-3$ non-convex angles.
+\qed
+\end{proof}
+
+\subsection*{(b)}
+
+We use the Shoelace formula to calculate the area of the given polygon. We know
+that if the area is negative then the sequence of points was given clockwise.
+
+\section*{Exercise 3}
+
+Our strategy is the following: Assume an orientation for the line, for example
+down to up and left to right. What we want of our polygon to be monotone is to
+be comprised of two chains, an upper and lower chain. Imagine that for every
+point of our polygon, a straight line to its projection on the given line is
+drawn. Now, we pick the point of the polygon which has the leftmost projection
+on our line. We start following its edges and we should expect them to maintain
+a specific direction on the underlying line, which should change exactly once
+until we circle back. The point where direction changes is where we switch
+between the chains. This is assuming generic position of the points with
+regards to our line but it can be shown that this is not an issue.
+
+Every oriented line like this can be parameterized with a parameter $t$. We'll
+assume that as $t$ increases we move upwards or rightwards, and when $t$
+decreases we move downwards or leftwards as applicable. The range of $t$
+doesn't matter, nor its sign. We will only use it for comparison purposes.
+Let's suppose we have a $param(p)$ which, given the coordinates of a point $p$
+on the line can give us such a $t$. An implementation of this can be trivially
+shown to be constant time, just using the parametric equation between some two
+points on our line.
+
+We'll also assume we have $proj(p)$, which gives us the point of the projection
+of $p$ on our given line. Also $pp(p) \equiv param(proj(p))$.
+
+So our algorithm does the following: 
+
+\begin{algorithm}
+	\caption{Detect if a polygon is monotone with regards to a line.}\label{alg.monotone}
+	\begin{algorithmic}[1]
+		\State $leftmost \gets 0$
+		\State $leftmostMinT \gets Inf$
+		\For {$i = 0; i < n; ++i$} \Comment{Find the point with the leftmost projection on our line.}
+			\If {$pp(v[i]) < leftmostMinT$}
+				\State $leftmostMinT \gets pp(v[i])$
+				\State $leftmost \gets i$
+			\EndIf
+		\EndFor
+
+		\State $inversions \gets 0$
+		\State $lastT \gets pp(v[leftmost])$
+		\State $direction \gets 1$
+
+		\For {$i = leftmost + 1; i != leftmost; i = (i + 1) \bmod n$} \Comment{Start traversing, allowing only one inversion.}
+			\If {$(pp(v[i]) - lastT) * direction < 0$}
+				\State $inversions \gets inversions + 1$
+				\State $direction \gets -direction$
+			\EndIf
+
+			\State $lastT \gets pp(v[i])$
+
+			\If {$inversions > 1$}
+				\State \textbf{return false}
+			\EndIf
+		\EndFor
+		\State \textbf{return true}
+	\end{algorithmic}
+\end{algorithm}
+
+It can be seen that our algorithm takes $O(n)$ time.
+
+\section*{Exercise 4}
+The incremental line algorithm presented in the textbook \cite{deberg} can
+clearly be characterized as a sweep line algorithm. One could imagine instead
+of iterating over the sorted list of points, that a sweep vertical line passes
+through each one (where the x-coordinate of each point constitutes an event for
+our sweep line). This happens twice, once for the upper hull and once for the
+lower one, meaning there are two sweeps: one from left to right and one from
+right to left. The sweep line status is maintained at $\mathcal{L}_{upper}$ for
+the first sweep and $\mathcal{L}_{lower}$ for the second. As described in the
+textbook, the algorithm is optimal, specifically $O(n logn)$.
+
+\section*{Exercise 5}
+We scan the plane in a counter-clockwise fashion starting from the line segment
+with an endpoint at the lowest y-coordinate. We rotate, stopping at every point
+and we maintain in our sweep line status in-order the segments that a line
+from $p$ at that a specific angle would intersect. When a segment is over, we
+update our status appropriately (delete and reorder). The segments that are
+ever at the top of this order are the ones that we return.
+
+The convention we'll be using is that the lowest point of a line segment is the
+start of it. We sort all the start and end points based on the
+counter-clockwise angle they form from point $p$. These will be our event
+points. In case two points have the same angle, we sort by their distance to $p$.
+
+This is similar to the skyline algorithm, only a rotating version.
+
+Sorting takes $O(n logn)$ and then we scan the points in sequence, needing only
+constant time for each point.
+
+\section*{Bonus Exercise}
+It seems that at a new line can add at most 4 new edges to the visibility
+polygon. Given this, the formula would be $4 + 4*n = 4*(n+1)$. This can be
+achieved by placing incrasingly smaller line segments on top of each other.
+
+\bibliography{bibliography}
+
+\end{document}
