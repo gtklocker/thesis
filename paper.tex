@@ -104,13 +104,33 @@ Cash.
 \subsection{Non-Interactive Proofs of Proofs of Work}
 
 \subsubsection{Sublinear SPV}
-There have been previous attempts to create proofs smaller in size than SPV
-proofs~\cite{KLS}. NIPoPoWs is the first secure construction~\cite{nipopows}.
-TODO
+We would like to be able to proof stuff like:
 
+\begin{itemize}
+  \item We have a valid chain where the last $k$ blocks are the ones we're
+    claiming. This is called a \textbf{suffix proof}.
+  \item We have a valid chain where a specific given block is included. This is
+    called an \textbf{infix proof}.
+\end{itemize}
+
+Our current best solution, SPV, requires providing the whole chain's block
+headers as proof. This is obviously linear in the size of the chain.
+
+There have been previous attempts to create proofs smaller in size than SPV
+proofs~\cite{KLS}, where a scheme for logarithmic proofs was proposed.
+This scheme was proven insecure in the NIPoPoWs paper~\cite{nipopows}.
+
+NIPoPoWs is the first secure construction~\cite{nipopows} for logarithmic
+proofs.
+
+\subsubsection{Assumptions}
 An assumption NIPoPoWs make is that the difficulty is constant. This is not
-true for Bitcoin or Bitcoin Cash, but we will see later how this assumption can
-be sidestepped.
+true for Bitcoin or Bitcoin Cash.
+
+NIPoPoWs also assume each block contains an interlink data structure, which
+we'll study shortly. Interlinks too don't exist in Bitcoin or Bitcoin Cash.
+
+In the next section we'll look at how we sidestep all those issues.
 
 \subsubsection{Levels}
 At the heart of the primitive lies the separation of blocks into levels. The
