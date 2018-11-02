@@ -73,11 +73,11 @@ constant size.
 The size of the blockchain has reached 185GB by September 2018, which makes
 it a very time consuming or even infeasible process to synchronise a full
 node. Fortunately, a solution was proposed in the original whitepaper
-\cite{bitcoin}, which allows the creation of so-called \textit{lite nodes}.
+~\cite{bitcoin}, which allows the creation of so-called \textit{lite nodes}.
 Lite nodes only know the headers of the entire blockchain, which are
 constant-size for each block (80 bytes). At the time of writing of this
-paper, the size of all block headers was \~{}42MB. The lite node then asks the
-network for transactions concerning it (e.g. transactions concerning a
+paper, the size of all block headers was \~{}42MB\@. The lite node then asks the
+network for transactions concerning it (e.g.\ transactions concerning a
 specific public key). Full nodes of the network find such transactions and
 return them to the requestor. For each transaction, the block header of the
 block it's included in is returned, along with a Merkle tree proof of
