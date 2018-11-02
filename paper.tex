@@ -54,7 +54,7 @@ private key and turned into an input to be used for another transaction.
 \subsubsection{Merkle Trees}
 A Merkle tree~\cite{merkle} is a data structure which allows a party to
 commit to a set of items using only a single hash, and prove the inclusion of
-any item in the commited set by providing a logarithmic proof in terms of the
+any item in the committed set by providing a logarithmic proof in terms of the
 cardinality of the set.
 
 More specifically, the hashes of the items consist the leafs of the tree, and
@@ -79,7 +79,7 @@ constant-size for each block (80 bytes). At the time of writing of this
 paper, the size of all block headers was \~{}42MB\@. The lite node then asks the
 network for transactions concerning it (e.g.\ transactions concerning a
 specific public key). Full nodes of the network find such transactions and
-return them to the requestor. For each transaction, the block header of the
+return them to the requester. For each transaction, the block header of the
 block it's included in is returned, along with a Merkle tree proof of
 inclusion which the lite node can then verify. This protocol is reliable as
 long as an adversary does not control the network of a lite node.
