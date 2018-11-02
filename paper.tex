@@ -140,7 +140,8 @@ blockchain. The genesis block is an exception to this rule as
 $\textit{level}(Gen) = \infty$.
 
 Intuitively, the level of a block is the number of leading zeros of the binary
-representation of the block id when left padded to the length of $T$.
+representation of the block id when left padded to the length of $T$. An
+example of this can be seen on Table~\ref{table:level-counting}.
 
 % TODO: should be a figure instead?
 \begin{table}
@@ -153,6 +154,7 @@ representation of the block id when left padded to the length of $T$.
     \hline
   \end{tabular}
   \caption{Calculating the level of a block by counting the leading zeros (3 in this case).}
+  \label{table:level-counting}
 \end{table}
 
 We call a block of level $\mu$ a $\mu$-superblock.
