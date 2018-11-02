@@ -39,7 +39,6 @@
 \section{Background}
 
 \subsection{Bitcoin}
-
 Bitcoin was introduced in 2008 by Satoshi Nakamoto~\cite{bitcoin} as a
 peer-to-peer version of electronic cash, allowing online payments to be sent
 directly between parties without the need of a intermediary.
@@ -49,7 +48,16 @@ inputs and outputs. An output is where the value creation happens for the
 receiver. An output can be later redeemed by using its designated receiver's
 private key and turned into an input to be used for another transaction.
 
+TODO
+
 \subsubsection{Block Structure}
+A block header contains mainly the hash of the previous block, a Merkle root
+hash to commit to a set of transactions, and a nonce.
+
+After the block header comes the series of transactions included in the block.
+
+TODO
+
 \subsubsection{Proof of Work}
 \subsubsection{Merkle Trees}
 A Merkle tree~\cite{merkle} is a data structure which allows a party to
