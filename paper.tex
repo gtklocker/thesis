@@ -77,6 +77,39 @@ Merkle trees are useful in Bitcoin in order to commit to a set of
 transactions to be included in a block while keeping the block header of a
 constant size.
 
+To provide proof of inclusion, all a prover has to do is provide a path of
+siblings up to the root $\sf{siblings}$ and a bit vector $\sf{left}$ indicating
+whether each sibling is on the left or the right. The verification process is
+shown in Algorithm~\ref{alg:merkle-verification}.
+
+\begin{algorithm}[H]
+  \caption{\label{alg:merkle-verification}The \textsf{Verify} algorithm
+    for a Merkle proof}
+    \begin{algorithmic}[1]
+      \Function{\sf Verify$_{\sf root}$}{\sf leaf, siblings, left}
+            \Let{\sf{currentHash}}{\sf{leaf}}
+            \While{$\sf{left} \neq []$}
+              \Let{\sf{siblingIsLeft}}{\sf{left.shift()}}
+              \If{\sf{siblingIsLeft}}
+                \Let{\sf{currentHash}}{H(siblings.shift() || currentHash)}
+              \Else
+                \Let{\sf{currentHash}}{H(currentHash || siblings.shift())}
+              \EndIf
+            \EndWhile
+            \State\Return{currentHash = root}
+        \EndFunction
+    \end{algorithmic}
+\end{algorithm}
+
+An example of a Bitcoin Merkle tree, along with a proof of inclusion for $K$ can be seen on Figure~\ref{fig:merkletree}.
+
+\begin{figure}
+  \centering
+  \includegraphics[width=0.9\columnwidth,keepaspectratio]{figures/merkle-tree-proof.png}
+  \caption{A Bitcoin Merkle tree. Source:~\cite{mastering}}
+  \label{fig:merkletree}
+\end{figure}
+
 \subsubsection{Simplified Payment Verification}
 The size of the blockchain has reached 185GB by September 2018, which makes
 it a very time consuming or even infeasible process to synchronise a full
