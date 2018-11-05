@@ -212,7 +212,7 @@ The NIPoPoWs paper introduces some notation for talking about blockchains with l
 
 \subsubsection{Interlink}
 Instead of keeping only the hash of the previous block inside the block header,
-we keep pointers to the previous superblock of every level. The structure
+for every superblock level we keep a pointer to the most recent superblock of that level. The structure
 containing these pointers is called the interlink. Bitcoin does not support
 such a structure in the block header but we will study how to sidestep this
 issue by velvet forking in a few sections.
