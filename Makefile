@@ -1,5 +1,6 @@
-paper.pdf: paper.tex bibliography.bib preamble.sty llncs.cls
-	pdflatex paper.tex
-	bibtex paper
-	pdflatex paper.tex
-	pdflatex paper.tex
+paper.pdf: paper.tex bibliography.bib preamble.sty
+	latexmk -pdf
+
+.PHONY: clean
+clean:
+	git clean -Xdf
