@@ -107,6 +107,17 @@ It's important to note that the interlink can be encoded as a series of block id
 \subsection{Velvet Forks}
 Velvet forks~\cite{nipopows,velvet} describe a formalization of adding
 arbitrary data inside blocks in order to allow potential applications without
-sacrificing the backwards compatibility of the blockchain. TODO
+sacrificing the backwards compatibility of the blockchain.
+
+Miners who are willing to contribute to the fork can add data of interest in the form of coinbase transaction data. 
+
+Backwards compatibility is achieved by not changing the consensus rules, meaning that set of acceptable blocks does not change. So any block that was acceptable remains acceptable even if it does not contain any data concerning the fork, or if it contains invalid data.
 
 \subsection{User-Activated Velvet Forks}
+In case miners aren't interested in including such data, users can also create such a fork by making a kind of transaction called velvet transaction. In a velvet transaction a user includes any data of interest in unspendable transaction outputs (like OP\_RETURN).
+
+For the consumer of such data, the only difference is that they have to look inside the whole block to find it, not only inside the coinbase data.
+
+Such forks come at the cost of making such transactions, because the user who makes the fork needs to pay transaction fees every time they wish to add data to the blockchain.
+
+For our application, we implemented a User-Activated Velvet Fork in order to add the interlink data structure to Bitcoin Cash blocks. Since Bitcoin Cash has very low fees, a projection of running such a fork comes at around 10€/month.
