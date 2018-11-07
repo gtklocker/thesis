@@ -12,8 +12,36 @@ Bitcoin is pseudonymous: the identity of each user is only their \emph{address},
 
 Transfer of value in Bitcoin happens with transactions. A transaction has inputs and outputs. An output is where the value creation happens for the receiver. An output can be later redeemed by using its designated receiver's private key and turned into an input to be used for another transaction.
 
+\subsection{Scripts}
 \subsection{Outputs}
+Outputs have value.
+
+\subsection{Inputs}
+An input is the way an output is redeemed. Specifically, it contains 3 things:
+\begin{itemize}
+  \item The hash of the transaction where the output of interest is contained.
+  \item An index clarifying which output in the transaction this input is referring to.
+  \item A signature (called \textsf{scriptSig}) used for the validation of the output script.
+\end{itemize}
+
+For the transaction to be valid, the script inside the specified output when run on a stack with the contents of \textsf{scriptSig} should return 1.
+
+As a convention, when we talk about the value of an input we mean the value of the output it redeems.
+
 \subsection{Transactions}
+A \emph{transaction} is a collection of inputs and outputs. It uses the sum of the inputs values' as credit to debit each output accordingly. As it makes sense, a transaction is only valid as long as all its outputs and inputs are valid. It should also be clear that the value of the outputs should not exceed the value of the outputs, otherwise we would be creating value out of thin air with new transactions. Specifically this is expressed as $\sum_{\sf i \in inputs} {\sf i.value} \ge \sum_{\sf o \in outputs} {\sf o.value}$. This is sometimes called the \emph{Law of Conservation}.
+
+In cases where $\sum_{\sf i \in inputs} {\sf i.value} > \sum_{\sf o \in outputs} {\sf o.value}$ we call
+$$\sum_{\sf i \in inputs} {\sf i.value} - \sum_{\sf o \in outputs} {\sf o.value}$$
+the \emph{transaction fee}. This is paid to the miner who successfully mines a block containing the transaction. This is one of the two ways Bitcoin uses to incentivize miners.
+
+\begin{figure}
+  \centering
+  \includegraphics[width=0.9\columnwidth,keepaspectratio]{figures/transaction-internally.png}
+  \caption{Transactions with their inputs and outputs.  Source:~\cite{mastering}}
+  \label{fig:transaction-internally}
+\end{figure}
+
 \subsection{Blocks}
 A block contains a list of transactions, the first of which is called the \emph{coinbase transaction} which is where value creation happens in Bitcoin. The miner crafts this transaction granting them some amount of Bitcoins and this transaction is going to be valid only if the block turns out valid. This doesn't mean that anyone can generate Bitcoin out of thin air: we'll see shortly how it actually comes at a cost with Proof-of-Work.
 
