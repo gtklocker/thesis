@@ -27,9 +27,28 @@ Bitcoin offers much more than just moving currency around. It allows us to actua
   \label{fig:bitcoin-script}
 \end{figure}
 
-This is an interesting script because it introduces two kinds of operations. First is commands prefixed with \code{OP\_}: these perform operations on values (usually the top 1 or 2) on the stack and push the result to the stack. Specifically, \code{OP\_HASH256} calculates the SHA256 hash of the value on the top of the stack (and pushes the result on the stack). \code{OP\_EQUALS} compares the top 2 values on the stack and pushes 1 or 0 if they are indeed equal or not accordingly. Values like \code{6fe...} in hex with no \code{OP\_} prefix are simply pushed to the stack.
+This is an interesting script because it introduces two kinds of operations. First is commands prefixed with \code{OP\_} (called \emph{opcodes}): these perform operations on values (usually the top 1 or 2) on the stack and push the result to the stack. Specifically, \code{OP\_HASH256} calculates the SHA256 hash of the value on the top of the stack (and pushes the result on the stack). \code{OP\_EQUALS} compares the top 2 values on the stack and pushes 1 or 0 if they are indeed equal or not accordingly. Values like \code{6fe...} in hex with no \code{OP\_} prefix are simply pushed to the stack.
 
 So what does this script do? It checks if the value on the stack is the preimage of the given hash. If we do push the correct preimage in the stack before running the script, the result is going to be 1, letting us know that the evaluation was successful.
+
+Such a script express our predicate, and is called a \textsf{pubKeyScript}. However the predicate must run on something. In our example above we assumed the preimage was on the stack before the stack ran, and this is how we parameterized our predicate. The way this is done in Bitcoin is running another script before the predicate called \textsf{scriptSig}, to essentially pass the parameters to our predicate. We'll see shortly how these can be leveraged to actually transfer funds.
+
+It's important to note that there's a third type of opcodes which can fail the script preemptively. These opcodes are usually in the form of \code{OP\_...VERIFY}. An example is \code{OP\_EQUALVERIFY} which fails the script if the top 2 values of the stack are not equal, and is otherwise a no-op.
+
+Next we'll look at a couple of interesting classes of scripts.
+
+\subsubsection{Anyone-can-spend}
+It's easy to make the predicate true for everyone. We can make \textsf{pubKeyScript} be \code{OP\_TRUE} (which adds the true value to the stack) and \textsf{scriptSig} be empty.
+
+\subsubsection{P2PKH}
+This is the standard script for conventional fund transfer in Bitcoin. Let's say we want to make sure only Bob can satisfy this script. The \textsf{pubKeyScript} is the following: \code{OP\_DUP OP\_HASH160 <Bob's address> OP\_EQUALVERIFY OP\_CHECKSIG}.
+
+The \textsf{scriptSig} is then typically \code{<Bob's signature> <Bob's public key>}. Values in \code{<>} are placeholders for actual values, they're not valid script commands. These have to be replaced with concrete values before the above scripts can be valid.
+
+Bob's signature will be on the hash of the transaction (which we'll explore shortly) containing the output. The script will then duplicate his public key, check that it matches the one on the \text{pubKeyScript}, and if it does check that he has provided a valid signature with that public key. If all these checks pass the stack will end up with 1 on top and the execution will be valid, thus the predicate will be satisfied.
+
+\subsubsection{OP\_RETURNs}
+It frequently is desired to add arbitrary data to the blockchain (e.g. for timestamping). To do this, one can make the arbitrary data part of the \textsf{pubKeyScript}. There's a special opcode for such cases called \code{OP\_RETURN} which can be followed by a series of arbitrary data (in hexadecimal). \code{OP\_RETURN} fails the script preemptively so no \code{scriptSig} can satisfy it. We'll see how based on \code{OP\_RETURN}s we can greatly augment the functionality of Bitcoin later on.
 
 \subsection{Outputs}
 An \emph{output} is a tuple ({\sf value, pubKeyScript}). The \textsf{value} refers to an amount of Bitcoin in Satoshi (where $\sf 10^8 \, Satoshi = 1 \, Bitcoin$) and \textsf{pubKeyScript} is a script which needs to be run against some stack and return 1 in order for \textsf{value} to be transferable.
