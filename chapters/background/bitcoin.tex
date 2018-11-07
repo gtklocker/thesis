@@ -14,7 +14,7 @@ Transfer of value in Bitcoin happens with transactions. A transaction has inputs
 
 \subsection{Scripts}
 \subsection{Outputs}
-Outputs have value.
+An \emph{output} is a tuple ({\sf value, pubKeyScript}). The \textsf{value} refers to an amount of Bitcoin in Satoshi (where $\sf 10^8 \, Satoshi = 1 \, Bitcoin$) and \textsf{pubKeyScript} is a script which needs to be run against some stack and return 1 in order for \textsf{value} to be transferable.
 
 \subsection{Inputs}
 An input is the way an output is redeemed. Specifically, it contains 3 things:
