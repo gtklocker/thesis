@@ -1,9 +1,16 @@
 \section{Bitcoin}
-Bitcoin was introduced in 2008 by Satoshi Nakamoto~\cite{bitcoin} as a peer-to-peer version of electronic cash, allowing online payments to be sent directly between parties without the need of a intermediary.
+Bitcoin was invented in 2008 by Satoshi Nakamoto~\cite{bitcoin} as a peer-to-peer version of electronic cash, allowing online payments to be sent directly between parties without the need of a intermediary.
+
+Bitcoin is pseudonymous: the identity of each user is only their \emph{address}, which corresponds to an ECDSA public key. This address can be used to receive money from other users. Each user can spend money only if they have their corresponding private key. A set of ECDSA keypairs comprises a \emph{wallet}. A user can have multiple addresses.
+
+\begin{figure}
+  \centering
+  \code{1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa}
+  \caption{A Bitcoin address}
+  \label{fig:address-example}
+\end{figure}
 
 Transfer of value in Bitcoin happens with transactions. A transaction has inputs and outputs. An output is where the value creation happens for the receiver. An output can be later redeemed by using its designated receiver's private key and turned into an input to be used for another transaction.
-
-TODO
 
 \subsection{Outputs}
 \subsection{Transactions}
