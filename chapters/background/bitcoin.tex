@@ -13,6 +13,24 @@ Bitcoin is pseudonymous: the identity of each user is only their \emph{address},
 Transfer of value in Bitcoin happens with transactions. A transaction has inputs and outputs. An output is where the value creation happens for the receiver. An output can be later redeemed by using its designated receiver's private key and turned into an input to be used for another transaction.
 
 \subsection{Scripts}
+Bitcoin offers much more than just move currency around. It allows us to actually move currency conditionally, where the condition can be expressed as a \emph{Bitcoin Script}. Bitcoin Script is a stack-based language. An example of a Bitcoin script can be seen on Figure~\ref{fig:bitcoin-script}.
+
+\begin{figure}
+  \centering
+  {
+    \tt
+    OP\_HASH256 \\
+    6fe28c0ab6f1b372c1a6a246ae63f74f931e8365e15a089c68d6190000000000 \\
+    OP\_EQUAL
+  }
+  \caption{A Bitcoin script}
+  \label{fig:bitcoin-script}
+\end{figure}
+
+This is an interesting script because it introduces two kinds of operations. First is commands prefixed with \code{OP\_}: these perform operations on values (usually the top 1 or 2) on the stack and push the result to the stack. Specifically, \code{OP\_HASH256} calculates the SHA256 hash of the value on the top of the stack (and pushes the result on the stack). \code{OP\_EQUALS} compares the top 2 values on the stack and pushes 1 or 0 if they are indeed equal or not accordingly. Values like \code{6fe...} in hex with no \code{OP\_} prefix are simply pushed to the stack.
+
+So what does this script do? It checks if the value on the stack is the preimage of the given hash. If we do push the correct preimage in the stack before running the script, the result is going to be 1, letting us know that the evaluation was successful.
+
 \subsection{Outputs}
 An \emph{output} is a tuple ({\sf value, pubKeyScript}). The \textsf{value} refers to an amount of Bitcoin in Satoshi (where $\sf 10^8 \, Satoshi = 1 \, Bitcoin$) and \textsf{pubKeyScript} is a script which needs to be run against some stack and return 1 in order for \textsf{value} to be transferable.
 
