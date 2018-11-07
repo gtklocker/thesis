@@ -10,6 +10,13 @@ TODO
 \subsection{Blocks}
 A block contains a list of transactions, the first of which is called the \emph{coinbase transaction} which is where value creation happens in Bitcoin. The miner crafts this transaction granting them some amount of Bitcoins and this transaction is going to be valid only if the block turns out valid. This doesn't mean that anyone can generate Bitcoin out of thin air: we'll see shortly how it actually comes at a cost with Proof-of-Work.
 
+\begin{figure}
+  \centering
+  \includegraphics[width=0.9\columnwidth,keepaspectratio]{figures/block-structure.pdf}
+  \caption{The block structure.  Source:~\cite{bitcoin}}
+  \label{fig:block-structure}
+\end{figure}
+
 A block header contains mainly the hash of the previous block, a Merkle root hash to commit to a set of transactions, and a nonce. Blocks are always referenced by the hash of their block header.
 
 \begin{figure}
