@@ -8,17 +8,14 @@ TODO
 \subsection{Outputs}
 \subsection{Transactions}
 \subsection{Blocks}
+A block contains a set of transactions
 A block header contains mainly the hash of the previous block, a Merkle root hash to commit to a set of transactions, and a nonce.
-
-After the block header comes the series of transactions included in the block.
-
-TODO
 
 \subsection{Proof of Work}
 The key to making Bitcoin decentralized is a technique called Proof-of-Work. Proof-of-Work was first invented in 1992 by Dwork et al.~\cite{dwork} as a measure of limiting email spam and denial-of-service attacks and later explored by Back~\cite{hashcash} as Hashcash.
 
 We'll examine a simplified model of Hashcash in order to explore the idea. Suppose we want to send an email to someone. In order to prove we've done work, we include a header (like \code{X-Hashcash}), which (very simplistically) includes our email address, and a nonce.
-\footnote{Hashcash headers actually contain 7 different fields in the header which have been omitted here for simplicity. The simplified version explain here is not making the same security guarantees as Hashcash.}
+\footnote{Hashcash headers actually contain 7 different fields which have been omitted here for simplicity. The simplified version explain here is not making the same security guarantees as Hashcash.}
 The nonce is picked so that the hash of the header $H(email || nonce)$ has its 20 most significant bits be all 0. The only feasible way to find this is by brute-forcing the nonce. Once the sender has found the nonce it's included in the header and sent.
 
 The receiver can then very easily check whether the header hashes to a valid value. If that's so, the email it contains belongs to the sender and the header is not being reused, then the email can be considered not spam.
