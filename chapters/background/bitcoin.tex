@@ -25,7 +25,7 @@ It's possible that there are contending chains of blocks. We then say there is a
 
 We call any valid blocks which are not part of our active chain \emph{orphans}. For example, on Figure~\ref{fig:blocks}, blocks 4b, 7a and 8a are orphans.
 
-\subsection{Proof of Work}
+\subsection{Proof-of-Work}
 The key to making Bitcoin decentralized is a technique called Proof-of-Work. Proof-of-Work was first invented in 1992 by Dwork et al.~\cite{dwork} as a measure of limiting email spam and denial-of-service attacks and later explored by Back~\cite{hashcash} as Hashcash.
 
 We'll examine a simplified model of Hashcash in order to explore the idea. Suppose we want to send an email to someone. In order to prove we've done work, we include a header (like \code{X-Hashcash}), which (very simplistically) includes the receiver's email address, and a nonce.
