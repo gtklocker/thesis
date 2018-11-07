@@ -25,9 +25,15 @@ The key to making Bitcoin decentralized is a technique called Proof-of-Work. Pro
 
 We'll examine a simplified model of Hashcash in order to explore the idea. Suppose we want to send an email to someone. In order to prove we've done work, we include a header (like \code{X-Hashcash}), which (very simplistically) includes our email address, and a nonce.
 \footnote{Hashcash headers actually contain 7 different fields in the header which have been omitted here for simplicity. The simplified version explain here is not making the same security guarantees as Hashcash.}
-The nonce is picked so that the hash of the header $H(email || nonce)$ has its 20 most significant bits be all 0. The only feasible way to find this is by brute-forcing the nonce. Once the sender has found the nonce it's included in the header and sent.
+The \emph{nonce} is picked so that the hash of the header $H(email || nonce)$ has its 20 most significant bits be all 0. The only feasible way to find this is by brute-forcing the nonce. Once the sender has found the nonce it's included in the header and sent.
 
 The receiver can then very easily check whether the header hashes to a valid value. If that's so, the email it contains belongs to the sender and the header is not being reused, then the email can be considered not spam.
+
+To reiterate, the idea is having a series of data to commit to and a hole for the nonce, which is brute-forced to satisfy a necessary predicate on the hash, specifically that its $n$ most significant bits are all zeroes. This is exactly how Bitcoin implements Proof-of-Work. Instead of the hole being on an email header the hole is on the block header. For a block to be valid, its header has to satisfy a predicate like the above.
+
+Bitcoin introduces a couple of differences. $n$ varies according to the block generation rate. Specifically, to translate the previous predicate to Bitcoin terminology, the hash of each block header has to satisfy $H({\sf blockHeader}) \le T$ where $T$ is called the \emph{target}. As the target goes up, the probability of being below it goes up and generating a valid block is easier. Conversely, if the target goes down it's harder to generate a valid block. To express this, in Bitcoin $\frac{1}{T}$ is called the \emph{difficulty}.
+
+To account for the block generation rate, which Bitcoin tries to keep to 1 block per 10 minutes, every 2016 blocks the target (and subsequently the difficulty) is adjusted accordingly. The target is calculated inside the Bitcoin software and is only as a function of the blocks previously seen (frequently called their \emph{view}), so as long as the Bitcoin nodes agree on the view they'll agree on the target and all consider the same set of incoming blocks as valid.
 
 \subsection{Merkle Trees}
 A Merkle tree~\cite{merkle} is a data structure which allows a party to
