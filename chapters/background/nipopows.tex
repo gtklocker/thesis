@@ -87,11 +87,11 @@ Suffix proofs are parameterized by $k$ and $m$. $k$ refers to the number of bloc
 
 A suffix proof of a chain $\chain$ is constituted of two chains, $\pi$ and $\chi$. The final proof is the concatenation of those two chains $\pi \chi$. $\chi$ always refers to the chain of unstable blocks and is defined as $\chi = \chain[-k:]$.
 
-The process for constructing $\pi$ is a little more convoluted. First we have to find the first level $\mu$ where $|\chain\upchain^\mu| \ge m$. We call this level $max\mu$. For this level we take all its blocks except for the last $m$: $\chi_{max\mu} = \chain\upchain^\mu[:-m]$. Then for every level $\mu$ from $max\mu - 1$ to $0$, we take blocks $\chi_\mu = \chain\upchain^\mu [:-m]\{\chain\upchain^{\mu+1}[-m]:\}$.
+The process for constructing $\pi$ is a little more convoluted. First we have to find the first level $\mu$ where $|\chain\upchain^\mu| \ge m$. We call this level $max\mu$. For this level we take all its blocks except for the last $m$: $\pi_{max\mu} = \chain\upchain^\mu[:-m]$. Then for every level $\mu$ from $max\mu - 1$ to $0$, we take blocks $\pi_\mu = \chain\upchain^\mu [:-m]\{\chain\upchain^{\mu+1}[-m]:\}$.
 
-$\chi$ is then defined as the concatenation of all those chains starting from the oldest block:
+$\pi$ is then defined as the concatenation of all those chains starting from the oldest block:
 
-$$ \chi = \chi_{max\mu} || \chi_{max\mu-1} || \ldots || \chi_0 $$
+$$ \pi = \pi_{max\mu} || \pi_{max\mu-1} || \ldots || \pi_0 $$
 
 \begin{figure}
   \centering
