@@ -52,12 +52,12 @@ Figure~\ref{fig:hierarchy} shows an example the implied blockchain created from 
 The NIPoPoWs paper introduces some notation for talking about blockchains with levels which we'll be using extensively. The notation is widely influenced by Python. Specifically:
 
 \begin{itemize}
-  \item $C$ denotes a blockchain, with $C[0]$ being the genesis block, $C[k]$ being the $k$-th first block and $C[-k]$ being the $k$-th last block.
-  \item $C[k:]$ denotes the sub-blockchain starting from the $k$-th block, $C[-k:]$ denotes the sub-blockchain starting from the $k$-th last block.
-  \item $C[:k]$ denotes the sub-blockchain ending before the $k$-th block, $C[:-k]$ denotes the sub-blockchain ending before the $k$-th last block.
-  \item $C[i:j]$ denotes the sub-blockchain starting from the $i$-th block and ending at the $j$-th block. $i$ and $j$ can also be negative numbers similar to above.
-  \item $C\{B:\}$ denotes the sub-blockchain starting from the block with block id $B$.
-  \item $C\upchain^\mu$ denotes the sub-blockset of C where all blocks are of level $\mu$ or higher.
+  \item $\chain$ denotes a blockchain, with $\chain[0]$ being the genesis block, $\chain[k]$ being the $k$-th first block and $\chain[-k]$ being the $k$-th last block.
+  \item $\chain[k:]$ denotes the sub-blockchain starting from the $k$-th block, $\chain[-k:]$ denotes the sub-blockchain starting from the $k$-th last block.
+  \item $\chain[:k]$ denotes the sub-blockchain ending before the $k$-th block, $\chain[:-k]$ denotes the sub-blockchain ending before the $k$-th last block.
+  \item $\chain[i:j]$ denotes the sub-blockchain starting from the $i$-th block and ending at the $j$-th block. $i$ and $j$ can also be negative numbers similar to above.
+  \item $\chain\{B:\}$ denotes the sub-blockchain starting from the block with block id $B$.
+  \item $\chain\upchain^\mu$ denotes the sub-blockset of $\chain$ where all blocks are of level $\mu$ or higher.
 \end{itemize}
 
 \subsection{Interlink}
