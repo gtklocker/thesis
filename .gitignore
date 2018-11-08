@@ -29,3 +29,4 @@
 *.pdf
 *.fdb_latexmk
 .DS_Store
+!figures/*
