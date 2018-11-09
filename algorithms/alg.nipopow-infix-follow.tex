@@ -1,0 +1,21 @@
+\begin{algorithm}[H]
+    \caption{\label{alg.nipopow-infix-follow}The \textsf{followDown} function
+    which produces the necessary blocks to connect a superblock $E$ to a
+    preceeding regular block $B$.  Source:~\cite{nipopows}}
+    \begin{algorithmic}[1]
+        \Function{\sf followDown}{$E$, $B$, \textsf{height}} %, realLink, blockById}
+            \State{$aux \gets \emptyset$; $\mu \gets \textit{level}(E)$}
+            \While{$E \neq B$}
+                \Let{B'}{\textsf{blockById}[E\text{.interlink}[\mu]]}
+                \If{$\textsf{height}[B'] < \textsf{height}[B]$}
+                    \Let{\mu}{\mu - 1}
+                \Else
+                    \Let{aux}{aux \cup \{E\}}
+                    \Let{E}{B'}
+                \EndIf
+            \EndWhile
+            \State\Return{$aux$}
+        \EndFunction
+    \vskip8pt
+    \end{algorithmic}
+\end{algorithm}

@@ -100,7 +100,32 @@ $$ \pi = \pi_{max\mu} || \pi_{max\mu-1} || \ldots || \pi_0 $$
   \label{fig:suffix-proof}
 \end{figure}
 
+It's important to notice that the chain provided to the verifier is an actual chain: one can start at the end and traverse it until the genesis block by utilizing the interlink of each block, similar to how they would do that on a conventional blockchain by using each block's $\sf previd$.
+
 \subsection{Infix Proofs}
+For the verifier to be able to determine a predicate on one or more blocks ($\chain' \subseteq \chain$) of our chain, we have to make sure we include them in a proof. A suffix proof is not guaranteed to include all blocks of interest in $\chain'$. In order to include these we have to make sure they are linked to the proof, e.g. that the proof chain is a traversable. To this end, let's assume some arbitrary block $B \in \chain'$. Let's also assume an existing suffix proof $\pi\chi$. We find blocks $E'$ and $E$ on the suffix proof, such that:
+
+\begin{itemize}
+  \item $E$ is the next block after $E'$ on the proof
+  \item $B$ comes before $E$ on $\chain$
+  \item $B$ comes after $E'$ on $\chain$
+\end{itemize}
+
+An example of such a triplet of blocks satisfying those conditions can be seen on Figure~\ref{fig:infix-proof}.
+
+\begin{figure}
+  \centering
+  \includegraphics[width=0.9\columnwidth,keepaspectratio]{figures/infix.pdf}
+  \caption{Construction of an infix proof.  Source:~\cite{nipopows}}
+  \label{fig:infix-proof}
+\end{figure}
+
+We then perform a procedure called $\sf followDown$ in order to figure out which blocks need to be added to the proof in order to link $E$ to $B$. $\sf followDown$ includes blocks on intermediate levels until $B$ is reached. The full algorithm can be seen on Algorithm~\ref{alg.nipopow-infix-follow}.
+
+\input{algorithms/alg.nipopow-infix-follow.tex}
+
+Augmenting the original suffix proof with the new blocks provided by $\sf followDown$ on all our blocks of interest $B \in \chain'$ gives us our final infix proof. Note that as was the case with our suffix proofs, the infix proof is traversable.
+
 \subsection{Proof Verification}
 \subsection{Velvet Forks}
 Velvet forks~\cite{nipopows,velvet} describe a formalization of adding arbitrary data inside blocks in order to allow potential applications without sacrificing the backwards compatibility of the blockchain.
