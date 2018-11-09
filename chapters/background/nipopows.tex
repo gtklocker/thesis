@@ -1,5 +1,12 @@
 \section{Non-Interactive Proofs of Proofs of Work}
 
+\subsection{The Prover-Verifier Model}
+Before we talk about the specifics of proofs we first have to define our setting. In our setting we have two kinds of actors, \emph{provers} and \emph{verifiers}.
+
+A verifier is a party who wishes to know something about our blockchain. It's assumed it doesn't have network access (i.e. it can't be a full node). A verifier can be thought of as a Turing Machine which takes one or more proofs as input, and then determines whether a predicate is true or not.
+
+Provers are parties with access to our blockchain's network, who wish to communicate to the verifier and convince them about a predicate.
+
 \subsection{Sublinear SPV}
 We would like to be able to prove statements like:
 
