@@ -14,3 +14,24 @@ cite
     - katz book
     - backbones
     - pow sidechains
+related work
+    - christoglou
+    - btcrelay
+    - federated (interledger, polkadot) (see pow sidechains paper/alexei)
+    - special chains (direct observation, i.e. rootstock)
+    - dest chain miners agnostic
+
+bitcoin ideal:
+* intro
+* transactions
+	value transfer
+	1 input, 1 output
+	how to spend
+	output has pk, input has sig
+	utxos
+	can't half-spend an output
+	output to many
+	change
+	many to one
+	* script
+* blocks
