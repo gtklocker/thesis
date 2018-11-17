@@ -1,4 +1,16 @@
 \chapter{Bitcoin Cash Velvet Fork Implementation}
+Since Bitcoin Cash blocks don't contain the interlink we have to utilize a User-Activated Velvet Fork. To this end, we need to make sure that a transaction is included in every single block containing its implied interlink. We do this by implementing a service which for every new block, calculates the expected interlink of the upcoming block and sends a transaction including this interlink in hopes that it will be included in the upcoming block. If this is indeed achieved then that block will indeed contain its valid interlink. We henceforth call the service which does this an \emph{interlinker}.
+
+\section{Interlink encoding}
+Including the whole interlink inside the transaction would make the transaction really big. Assuming a naive encoding of the interlink, where each 256-bit block hash from level $0$ up to $\infty$ is concatenated, on the Bitcoin Cash testnet at the time of writing just the interlink would be ~0.6875KB. In Bitcoin the fee of the transaction is proportional to the transaction size, and since we're going to be sending a transaction for every block (which is mined approximately every 10 minutes), it's important that we keep this cost down. In order to save space, we only include a commitment to the interlink in our transactions. Specifically, we take the Merkle Tree root of the Merkle Tree with leafs the block hashes starting from level $0$ up to $\infty$. This way, our interlink encoding is constant size and we can easily provide compact proofs for any of the levels.
+
+\section{Discoverability}
+We've talked about how just including the interlink somewhere on a block is what really matters but it's crucial that we make this information easy to discover. We achieve this in two ways. First, we include the interlink commitment inside a special \code{OP\_RETURN} output. Such outputs are already being used for storing arbitrary data in blocks so it's where someone would expect our interlink to be. Second, we aim to make this interlink discoverable for lite nodes, so we don't require our users to download a whole block in order to look into it. We achieve this by utilizing a method called \emph{SPV tagged outputs}. TODO
+
+\section{Viability}
+The cost of running an interlinker on the Bitcoin Cash chain is estimated to 10€ per month at the time of writing.
+
+We provide two implementations of an interlinker. Since the writing of this thesis, both interlinkers run in production on the Bitcoin Cash testnet chain. We'll now look at the pros and cons of each.
 
 \section{Bitcoin-ABC}
-\section{Interlinker}
+\section{bcash}
