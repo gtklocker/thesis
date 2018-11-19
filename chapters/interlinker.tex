@@ -13,4 +13,18 @@ The cost of running an interlinker on the Bitcoin Cash chain is estimated to 10â
 We provide two implementations of an interlinker. Since the writing of this thesis, both interlinkers run in production on the Bitcoin Cash testnet chain. We'll now look at the pros and cons of each.
 
 \section{Bitcoin-ABC}
+Our first implementation is built on top of Bitcoin-ABC. Bitcoin-ABC is the reference implementation for Bitcoin Cash in C++. It is a fork of the original Bitcoin codebase (now Bitcoin Core), and it was the first ever implementation for Bitcoin Cash. It has a very active community of both developers and users. The code is very well written and tested, and any new feature for the Bitcoin Cash chain appears on Bitcoin-ABC first.
+
+We run Bitcoin-ABC as a full node and interface with it using JSON-RPC. The interlinker is a Python module which knows (a) the credentials to connect to the full node and (b) the velvet fork genesis block id.
+
+After it makes sure the full node is fully synced it starts waiting for new blocks. As described above we need our interlinker to get notified whenever there's a new block so that it can send a transaction with the new interlink for inclusion in the upcoming block. There's two options to get notified for new blocks from a full node.
+
+The first option is to utilize the ZeroMQ functionality of Bitcoin-ABC. If compiled with the appropriate flags, Bitcoin-ABC can create a ZeroMQ channel where it will send notifications for new blocks and transactions. While the method seemed very modern we decided against using it. The main reason was race conditions: it's possible that the node pushes out a ZeroMQ notification about a block, however that block is still not stored correctly yet in the block db, causing an immediate \code{getblock} request on the new block to fail. While this could be worked around, this combined with the fact that the software needs to be recompiled for this option to work made it seem like it was not the best option available.
+
+What we ended up using is busy polling through JSON-RPC, using the \code{getbestblockhash} method. Every 5 second, or any defined interval in the configuration, the interlinker will check the best block hash and if it doesn't match the one previously given then this means that there's been a new block.
+
+In case there's a new block, the interlinker will promptly compute the correct interlink for it, by updating the interlink with all the intermediate blocks from the velvet fork genesis up until and including the new block. It will then compute the Merkle Tree root and included it in an SPV tagged output, and then create and send a transaction with that output.
+
+It's important to note here that in order to send the transactions, the interlinker has to spend money. However, we haven't talked about the interlinker having a wallet or private keys and any way to fund it. Because of how the JSON-RPC methods work we don't need to specify a private key or wallet external to the full node and we can let the full node create our transactions using its default wallet. Thus the way to fund the interlinker is to fund the default wallet of the full node.
+
 \section{bcash}
