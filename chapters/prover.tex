@@ -12,5 +12,29 @@ When we talked about NIPoPoWs we mentioned how it's essential that our proof for
 
 If our chain is not traversable the proof is automatically invalid.
 
+We'll now look at the concrete implementation of the prover.
+
+\section{Invalid Interlink Handling}
+The original NIPoPoWs paper~\cite{nipopows} gives us some insight into how to handle blocks with invalid interlinks. Let's look at where we need to make changes starting with suffix proofs.
+
+For suffix proofs we need a way to obtain the upchain of a chain, denoted as $\chain\upchain^\mu$. When we first defined upchain we didn't explain how it should be implemented. Let's start with an implementation:
+
+\subsection{followUp}
+$\sf followUp$ takes a block $b$ and a level $\mu$ as parameters. It then tries to get back on a block of level $\mu$ by only using valid pointers. This means that in case a block doesn't have a valid interlink it will drop down to level 0 (via $\sf previd$) in order to keep going. It then returns 
+
+\subsection{followDown}
+
+\subsection{findVelvetUpchain}
+
+\begin{lstlisting}[language=Python]
+def upchain(chain, m):
+  return [block for block in chain if level(block) >= m]
+\end{lstlisting}
+
+It's easy to see that blocks 
+
 \section{bcash}
+bcash, also used for the interlinker earlier, turns out the be the only option for an SPV node on Bitcoin Cash, making it the obvious choice for the prover.
+
 \section{Testing}
+Due to the real-time and asynchronous nature of the prover it's important that our implementation is resilient and bug-free. In order to assert that the code has been thoroughly unit tested, boasting a code coverage of >90\%. The tests are written and run with Jest. There are also integration tests using real-world data.
