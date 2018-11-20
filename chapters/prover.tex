@@ -1,4 +1,16 @@
-\chapter{NIPoPoW Velvet Fork Prover Implementation}
+\chapter{NIPoPoW Velvet Fork Prover}
+Now that we've established a fork on the Bitcoin Cash chain, we show how our fork can be put to use by creating proofs. We introduce a kind of client called a \emph{prover} which can create all kinds of NIPoPoW proofs on demand.
+
+Let's assume we have an SPV node. We set the bloom filter to our velvet fork tag in order to get all blocks containing only the transactions of the fork. It's possible to then extract from each transaction the payload, which should be the interlink commitment. Since anyone can post such transactions on the blockchain, we have to make sure that the commitment is actually true before we can use it. In order to do that we maintain our own version of the interlink for each block (similar to how the interlinker does) which we know is correct called $\sf realLink$. Then for every block, we compare its commitments (there may be many) with the Merkle Tree root of our $\sf realLink$. If there is a valid commitment we say that the block has a valid interlink. We store the full interlink as $\sf realLink[id(block)]$.
+
+When we talked about NIPoPoWs we mentioned how it's essential that our proof forms a blockchain that can be traversed from start to end. In order to make our proof traversable, whenever we include a block we have to make sure it connects validly to the previous one either by (a) using the regular $\sf previd$ inside the block or (b) using a valid interlink. If we use the $\sf previd$ to link back to the previous block then all the information someone needs to verify the traversability is already there and we don't need to add anything extra. In the case we use the interlink however, we need to provide the Merkle Tree proofs for:
+
+\begin{itemize}
+  \item The transaction containing the valid interlink commitment.
+  \item The interlink level we use for the connection.
+\end{itemize}
+
+If our chain is not traversable the proof is automatically invalid.
 
 \section{bcash}
 \section{Testing}
