@@ -17,8 +17,6 @@ bitcoin cash blocks incl merkle tree for tx incl merkle tree for interlink incl 
 
 example chain with super blocks and actual merkle tree proof for interlink and tree with examples (mock 16-bit values) TODO
 
-TODO* cite https://fc18.ifca.ai/preproceedings/6.pdf
-
 \section{Discoverability}
 We've talked about how just including the interlink somewhere on a block is what really matters but it is crucial that we make this information easy to discover. We achieve this in two ways. First, we include the interlink commitment inside a special \code{OP\_RETURN} output. Such outputs are already being used for storing arbitrary data in blocks~\cite{arbitrary-data} therefore we adopt this method for storing our interlinks. Second, we aim to make this interlink discoverable for lite nodes, so we don't require our users to download a whole block in order to look into it. We achieve this by utilizing a method called \emph{SPV tagged outputs}~\cite{spv-tagged}.
 
