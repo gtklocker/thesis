@@ -23,7 +23,7 @@ TODO* cite https://fc18.ifca.ai/preproceedings/6.pdf
 We've talked about how just including the interlink somewhere on a block is what really matters but it is crucial that we make this information easy to discover. We achieve this in two ways. First, we include the interlink commitment inside a special \code{OP\_RETURN} output. Such outputs are already being used for storing arbitrary data in blocks~\cite{arbitrary-data} therefore we adopt this method for storing our interlinks. Second, we aim to make this interlink discoverable for lite nodes, so we don't require our users to download a whole block in order to look into it. We achieve this by utilizing a method called \emph{SPV tagged outputs}~\cite{spv-tagged}.
 
 SPV tagged outputs are outputs that are tagged so that they can be discovered by SPV nodes who add the ``tag'' to the filter. Specifically, we form outputs of the form \code{OP\_RETURN baba deadbeef}, where \code{baba} is our tag and \code{deadbeef} is our payload (in our case, the interlink commitment). A bloom filter for \code{baba} will then match this output and subsequently the transaction that contains it and this is how our specialized SPV nodes can discover our outputs (where fullnodes don't know about our velvet fork TODO).
-\footnote{A similar but slightly differently implemented technique is used in Trust is Risk (cite TODO) where multisig transactions are used and an extra address is added for both proof-of-burn and bypassing the bloom filter.}
+
 We make extensive use of this feature as we'll see on the next chapter.
 
 Mention our own tag. TODO
