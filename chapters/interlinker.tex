@@ -20,12 +20,16 @@ example chain with super blocks and actual merkle tree proof for interlink and t
 \section{Discoverability}
 We've talked about how just including the interlink somewhere on a block is what really matters but it is crucial that we make this information easy to discover. We achieve this in two ways. First, we include the interlink commitment inside a special \code{OP\_RETURN} output. Such outputs are already being used for storing arbitrary data in blocks~\cite{arbitrary-data} therefore we adopt this method for storing our interlinks. Second, we aim to make this interlink discoverable for lite nodes, so we don't require our users to download a whole block in order to look into it. We achieve this by utilizing a method called \emph{SPV tagged outputs}~\cite{spv-tagged}.
 
-SPV tagged outputs are outputs that are tagged so that they can be discovered by SPV nodes who add the ``tag'' to the filter. Specifically, we form outputs of the form \code{OP\_RETURN baba deadbeef}, where \code{baba} is our tag and \code{deadbeef} is our payload (in our case, the interlink commitment). A bloom filter for \code{baba} will then match this output and subsequently the transaction that contains it and this is how our specialized SPV nodes can discover our outputs (where fullnodes don't know about our velvet fork TODO).
+SPV tagged outputs are outputs that are tagged so that they can be discovered by SPV nodes who add the ``tag'' to the filter. Specifically, we form outputs of the form \code{OP\_RETURN baba deadbeef}, where \code{baba} is our tag and \code{deadbeef} is our payload (in our case, the interlink commitment). A bloom filter for \code{baba} will then match this output and subsequently the transaction that contains it and this is how our specialized SPV nodes can discover our outputs. The full nodes forwarding the velvet transactions to the SPV nodes don't have any knowledge of what a velvet fork even is, let alone that they are forwarding its transactions.
 
-We make extensive use of this feature as we'll see on the next chapter.
+The tag we use for our transactions is \code{696e7465726c696e6b}, which is the ASCII encoding of \code{interlink}. An example of such a real-world velvet transaction created by our deployed interlinker on the Bitcoin Cash testnet can be seen on Figure~\ref{fig:actual-velvet-tx}.
 
-Mention our own tag. TODO
-Example of a transaction of our own. TODO
+\begin{figure}
+  \centering
+  \includegraphics[width=0.9\columnwidth,keepaspectratio]{figures/actual-velvet-tx.png}
+  \caption{An actual velvet fork transaction.}
+  \label{fig:actual-velvet-tx}
+\end{figure}
 
 \section{Fault Tolerance}
 It is important to note that the interlinker works on a best-effort basis. Due to the nature of Velvet Forks though, no failure is fatal. The types of failures are as follows:
