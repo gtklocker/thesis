@@ -3,8 +3,6 @@ We implement ... motivation TODO ...
 
 Since Bitcoin Cash blocks don't contain the interlink we have to utilize a User-Activated Velvet Fork. To this end, we need to make sure that a transaction is included in every single block containing its implied interlink. We do this by implementing a service which for every new block, calculates the expected interlink of the upcoming block and sends a transaction including this interlink in hopes that it will be included in the upcoming block. If this is indeed achieved then that block will indeed contain its valid interlink. We henceforth call the service which does this an \emph{interlinker}.
 
-It is ok to miss blocks TODO
-
 \section{Interlink encoding}
 Including the whole interlink inside the transaction would make the transaction really big. Assuming a naive encoding of the interlink v, where each 256-bit block hash from level $0$ up to $\infty$ is concatenated, on the Bitcoin Cash testnet at the time of writing just the interlink would be 704 bytes. In Bitcoin Cash the fee of the transaction is proportional to the transaction size, and since we're going to be sending a transaction for every block (which is mined approximately every 10 minutes), it is important that we keep this cost down. 
 
@@ -30,6 +28,19 @@ We make extensive use of this feature as we'll see on the next chapter.
 
 Mention our own tag. TODO
 Example of a transaction of our own. TODO
+
+\section{Fault Tolerance}
+It is important to note that the interlinker works on a best-effort basis. Due to the nature of Velvet Forks though, no failure is fatal. The types of failures are as follows:
+
+\begin{itemize}
+  \item \textbf{Crash failure}: The interlinker crashes or halts.
+  \item \textbf{Omission failure}: The interlinker fails to push a transaction upon seeing a new block.
+  \item \textbf{Timing failure}: The interlinker pushes a transaction which fails to be included in the upcoming block.
+  \item \textbf{Response failure}: The interlinker pushes a transaction with an invalid interlink.
+  \item \textbf{Arbitrary failure}: The interlinker pushes a transaction before a new block is seen or pushes a duplicate for a specific upcoming block twice.
+\end{itemize}
+
+We will study how these failures can be mitigated in the next section.
 
 \section{Viability}
 The cost of running an interlinker on the Bitcoin Cash chain is estimated to 10€ per month at the time of writing.
