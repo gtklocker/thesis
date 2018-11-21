@@ -62,13 +62,7 @@ Our transaction size ($\sf txBytes$) is constant at exactly 244 bytes. The media
   \end{tabular}
 \end{table}
 
-We provide two implementations of an interlinker. Since the writing of this thesis, both interlinkers run in production on the Bitcoin Cash testnet chain. We'll now look at the pros and cons of each.
-
-TODO during the period xxx to yyy we observed the following experimental data:
-x\% valid transactions TODO
-overhead TODO
-interlinker size TODO
-levels TODO
+We provide two implementations of an interlinker which both run in production. We'll now look at the pros and cons of each.
 
 \section{Bitcoin-ABC}
 Our first implementation is built on top of Bitcoin-ABC. Bitcoin-ABC is the reference implementation for Bitcoin Cash in C++. It is a fork of the original Bitcoin codebase (now Bitcoin Core), and it was the first ever implementation to support Bitcoin Cash. It has a very active community of developers and users. Due to its heritage from Bitcoin Core the code is very well written and tested, and any new feature for the Bitcoin Cash chain appears on Bitcoin-ABC first.
@@ -96,3 +90,12 @@ code snippets TODO
 
 \section{bcash}
 The second implementation is build on top of the bcash JavaScript library. bcash implements a full node and wallet functionality exclusively in JavaScript without being based on the Bitcoin C++ codebase as did most previous solutions. A major advantage of bcash is that it implements an SPV node too, which is very useful since the interlinker only needs the block ids of the chain but doesn't care about the block contents, so requiring a full node to run it would be a waste of space and bandwidth.
+
+\section{Experimental Data TODO}
+At the time of writing of this thesis, both interlinkers run in production on the Bitcoin Cash testnet chain.
+
+During the period from 27 September to 21 November we observed.
+x\% valid transactions
+overhead TODO
+interlink size (constant) TODO
+levels graph TODO
