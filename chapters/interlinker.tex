@@ -79,7 +79,7 @@ What we ended up using is busy polling through JSON-RPC with the \code{getbestbl
 
 In case there's a new block, the interlinker will promptly compute the correct interlink for it, by updating the interlink with all the intermediate blocks from the velvet fork genesis up to and including the new block. It will then compute the Merkle Tree root and include it in an SPV tagged output. It will then wrap the output inside a change transaction and send it to the network.
 
-It is important to note here that in order to send the transactions, the interlinker has to spend funds (because of tx fees TODO). However, we haven't talked about the interlinker controlling a wallet or private keys which would make it seem like there is no way to fund the transactions. Because of how the JSON-RPC methods work we don't need to specify a private key or wallet external to the full node and we can let the full node create and pay for our transactions using its default wallet. Thus the way to fund the interlinker is to fund the default wallet of the full node.
+It is important to note here that in order to send the transactions, the interlinker has to pay transaction fees as seen earlier. However, we haven't talked about the interlinker controlling a wallet or private keys which would make it seem like there is no way to fund the transactions. Because of how the JSON-RPC methods work we don't need to specify a private key or wallet external to the full node and we can let the full node create and pay for our transactions using its default wallet. Thus the way to fund the interlinker is to fund the default wallet of the full node.
 
 show transaction TODO
 show transaction chain TODO
