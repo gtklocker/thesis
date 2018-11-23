@@ -1,0 +1,24 @@
+\begin{algorithm}[H]
+    \caption{\label{alg.nipopow-velvet-follow}followUp
+    produces the blocks to connect two superblocks in velvet forks.}
+    \begin{algorithmic}[1]
+        \Function{\sf followUp}{$B$, $\mu$, realLink, blockById}
+            \Let{\textsf{aux}}{\{B\}}
+            \While{$B \neq \textsf{Gen}$}
+                \If{$B.\textsf{interlink}[\mu] = \textsf{realLink}[\textsf{id}(B)][\mu]$}
+                    \Let{id}{B.\textsf{interlink}[\mu]}
+                \Else
+                    \Comment{Invalid interlink}
+                    \Let{id}{B.\textsf{previd}}
+                \EndIf
+                \Let{B}{\textsf{blockById}[id]}
+                \Let{\textsf{aux}}{\textsf{aux}\cup \{B\}}
+                \If{$\textit{level}(B) = \mu$}
+                    \State\Return{$B$, aux}
+                \EndIf
+            \EndWhile
+            \State\Return{$B$, aux}
+        \EndFunction
+    \vskip8pt
+    \end{algorithmic}
+\end{algorithm}

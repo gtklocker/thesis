@@ -17,21 +17,19 @@ We'll now look at the concrete implementation of the prover.
 \section{Invalid Interlink Handling}
 The original NIPoPoWs paper~\cite{nipopows} gives us some insight into how to handle blocks with invalid interlinks. Let's look at where we need to make changes starting with suffix proofs.
 
-For suffix proofs we need a way to obtain the upchain of a chain, denoted as $\chain\upchain^\mu$. When we first defined upchain we didn't explain how it should be implemented. Let's start with an implementation:
+For suffix proofs we need a way to obtain the upchain of a chain, denoted as $\chain\upchain^\mu$. We will now define a procedure to programatically obtain the upchain of a chain called $\sf find \chain\upchain^\mu$.
 
-\subsection{followUp}
-$\sf followUp$ takes a block $b$ and a level $\mu$ as parameters. It then tries to get back on a block of level $\mu$ by only using valid pointers. This means that in case a block doesn't have a valid interlink it will drop down to level 0 (via $\sf previd$) in order to keep going. It then returns 
+\subsection{\sf followUp}
+$\sf followUp$ takes a block $b$ and a level $\mu$ as parameters. Starting from $b$ it traverses the chain until it reaches another block of level $\mu$ called $B$. In doing so, it is only allowed to use valid pointers. It will only follow a pointer from a block's interlink at level $\mu$ if there is a valid interlink in that block. Otherwise, the only option is to follow the previous block pointer ($\sf previd$). Once $B$ is reached, it is returned alongside the blocks that were traversed as a blockset called $\sf aux$.
 
-\subsection{followDown}
+\input{algorithms/alg.nipopow-velvet-follow.tex}
 
-\subsection{findVelvetUpchain}
+%TODO figure with straight and dropdown cases
 
-\begin{lstlisting}[language=Python]
-def upchain(chain, m):
-  return [block for block in chain if level(block) >= m]
-\end{lstlisting}
+\subsection{$\sf find \chain\upchain^\mu$}
+Now that we have a way to go back on a level, we can utilize it to construct the entire traversable level $\mu$ up to block $b$, starting from the end of the chain $\chain[-1]$: this is what ${\sf find \chain\upchain^\mu}(b)$ accomplishes. It works by repeatedly calling $\sf followUp$ on the oldest block it has and including the result in its final chain.
 
-It's easy to see that blocks 
+\input{algorithms/alg.nipopow-velvet-upchain.tex}
 
 \section{bcash}
 bcash, also used for the interlinker earlier, turns out the be the only option for an SPV node on Bitcoin Cash, making it the obvious choice for the prover.

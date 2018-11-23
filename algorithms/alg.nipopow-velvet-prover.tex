@@ -1,0 +1,26 @@
+\begin{algorithm}[H]
+    \caption{\label{alg.nipopow-velvet-prover}The \textsf{Prove} algorithm
+    for the NIPoPoW protocol, modified for a velvet fork.}
+    \begin{algorithmic}[1]
+        \Function{\sf{Prove}'$_{m,k}$}{$\chain, \textsf{realLink}, \textsf{blockById}$}
+            \Let{max\mu}{|\textsf{realLink}[\textsf{id}(\chain[-k-1])]|}
+            \Let{b}{\chain[0]}
+            \Comment{Genesis block}
+            \Let{\tilde\Pi}{\emptyset}
+            \For{$\mu = max\mu$ down to $0$}
+                \State $\pi, aux \gets$
+                    \begin{varwidth}[t]{\linewidth}
+                        $\textsf{find }\chain[:-k]\upchain^\mu
+                        (b, \textsf{realLink}, \textsf{blockById})$
+                    \end{varwidth}
+                \If{$|\pi| \geq m$}
+                    \Let{b}{\pi[-m]}
+                \EndIf
+                \Let{\tilde\Pi}{\tilde\Pi \cup aux}
+            \EndFor
+            \Let{\chi}{\chain[-k:]}
+            \State\Return{$\tilde\Pi\chi$}
+        \EndFunction
+    \vskip8pt
+    \end{algorithmic}
+\end{algorithm}
