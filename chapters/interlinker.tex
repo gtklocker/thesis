@@ -91,11 +91,27 @@ code snippets TODO
 \section{bcash}
 The second implementation is build on top of the bcash JavaScript library. bcash implements a full node and wallet functionality exclusively in JavaScript without being based on the Bitcoin C++ codebase as did most previous solutions. A major advantage of bcash is that it implements an SPV node too, which is very useful since the interlinker only needs the block ids of the chain but doesn't care about the block contents, so requiring a full node to run it would be a waste of space and bandwidth.
 
-\section{Experimental Data TODO}
-At the time of writing of this thesis, both interlinkers run in production on the Bitcoin Cash testnet chain.
+\section{Deployment}
+At the time of writing of this thesis, both interlinkers run in production on the Bitcoin Cash testnet chain and have been for over 2 months. We started with our first deployment late September 2018, with the first prototype of our Python interlinker. This gave us a chance to catch bugs that only appear on long running processes and make sure our software is resilient to network and other library failures. As new features and bug fixes kept rolling in our software we continuously updated the deployments.
 
-During the period from 27 September to 21 November we observed.
-x\% valid transactions
-overhead TODO
-interlink size (constant) TODO
-levels graph TODO
+docker images
+docker-compose
+
+\section{Experimental Data}
+\begin{figure}
+  \centering
+  \includegraphics[width=0.9\columnwidth,keepaspectratio]{figures/testnet-deployment-reliability.pdf}
+  \caption{Reliability of our testnet deployment.}
+  \label{fig:testnet-deployment-reliability}
+\end{figure}
+
+We will now examine real-world data gathered from our Bitcoin Cash testnet deployment. On Figure~\ref{fig:testnet-deployment-reliability} we can look at the reliability of our interlinker deployment. We can see that about 60\% of the blocks have been correctly interlinked with our velvet transactions, and about 10\% of them only have 1 interlink pointer missing, which makes them potentially usable. With $\infty$ we denote the case where all pointers are missing due to a block only having incorrect interlinks or no interlinks at all.
+
+\begin{figure}
+  \centering
+  \includegraphics[width=0.9\columnwidth,keepaspectratio]{figures/bitcoin-cash-testnet-levels.pdf}
+  \caption{Level distribution on Bitcoin Cash testnet.}
+  \label{fig:bitcoin-cash-testnet-levels}
+\end{figure}
+
+On Figure~\ref{fig:bitcoin-cash-testnet-levels} we see the level distribution on the Bitcoin Cash testnet. As expected, the level growth is logarithmic compared to the chain length.
