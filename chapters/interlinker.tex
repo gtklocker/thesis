@@ -1,21 +1,30 @@
 \chapter{Velvet Fork Implementation}
 We implement ... motivation TODO ...
 
-Since Bitcoin Cash blocks don't contain the interlink we have to utilize a User-Activated Velvet Fork. To this end, we need to make sure that a transaction is included in every single block containing its implied interlink. We do this by implementing a service which for every new block, calculates the expected interlink of the upcoming block and sends a transaction including this interlink in hopes that it will be included in the upcoming block. If this is indeed achieved then that block will indeed contain its valid interlink. We henceforth call the service which does this an \emph{interlinker}.
+\pdffigure{blocks-with-their-interlinks}{Example of blocks with their corresponding interlinks for $T = 100000$. Note that for the upcoming block marked with \textbf{?} we can produce its interlink without knowing its hash.}
+
+Since Bitcoin Cash blocks don't contain the interlink we have to utilize a User-Activated Velvet Fork. To this end, we need to make sure that a transaction is included in every single block containing its implied interlink. We do this by implementing a service which for every new block, calculates the expected interlink of the upcoming block and sends a transaction including this interlink in hopes that it will be included in the upcoming block. If this is indeed achieved then that block will indeed contain its valid interlink. We henceforth call the service which does this an \emph{interlinker}. An example of blocks and their corresponding interlinks can be seen on Figure~\ref{fig:blocks-with-their-interlinks}.
+
+\section{Picking a Velvet Genesis}
+Naturally one would expect the interlink to start from the real blockchain genesis as it would enable proofs for any already existing block of that blockchain. However, for older blocks there can be no improvement. There is no other option than providing the full chain as a proof since no older blocks contain any interlinks. Thus in order to avoid accounting in our interlink for blocks in the past that can only be connected to the real genesis by supplying the full chain we choose a new genesis called the \emph{velvet genesis}. For our purposes in Bitcoin Cash testnet we chose the block with height 1257603 as our velvet genesis.
 
 \section{Interlink encoding}
-Including the whole interlink inside the transaction would make the transaction really big. Assuming a naive encoding of the interlink v, where each 256-bit block hash from level $0$ up to $\infty$ is concatenated, on the Bitcoin Cash testnet at the time of writing just the interlink would be 704 bytes. In Bitcoin Cash the fee of the transaction is proportional to the transaction size, and since we're going to be sending a transaction for every block (which is mined approximately every 10 minutes), it is important that we keep this cost down. 
+We now have to consider our options for representing the interlink. 
+Bitcoin Cash uses SHA-256 for the block hashes, meaning that each block id consists of 32 bytes. 
+A naive encoding would be one where each 32-byte block hash from level $0$ up to $\infty$ is concatenated, with the $\infty$ pointer always pointing to the genesis block..
+For 35 levels, which according to Figure~\ref{fig:bitcoin-cash-testnet-levels-after-velvet-genesis} is a reasonable figure, this encoding would take approximately 1.12KB.
+Considering that \code{OP\_RETURN} scripts are limited in size to 223 bytes, this would only allow us to include up to 6 pointers at best.
 
-bitcoin cash levels TODO
-bitcoin cash uses sha256 TODO explain size estimate of naive method
+\begin{figure}
+  \centering
+  \includegraphics[width=0.9\columnwidth,keepaspectratio]{figures/bitcoin-cash-testnet-levels-after-velvet-genesis.pdf}
+  \caption{Number of levels assuming our selected velvet genesis.}
+  \label{fig:bitcoin-cash-testnet-levels-after-velvet-genesis}
+\end{figure}
 
-In order to save space, we only include a commitment to the interlink in our transactions. Specifically, we take the Merkle Tree root of the Merkle Tree with leafs the block hashes starting from level $0$ up to $\infty$. This way, our interlink encoding is constant size and we can easily provide compact proofs for any of the levels. TODO give numbers
+Putting this limitation aside, the fee of the transaction is proportional to the transaction size, and since we're going to be sending a transaction for every block (which is mined approximately every 10 minutes), it is important that the fee is minimized.
 
-bitcoin cash (testnet) levels merkle tree TODO
-bitcoin cash (testnet) logarithmic scale histogram of block levels TODO
-bitcoin cash blocks incl merkle tree for tx incl merkle tree for interlink incl coloring for some some interlink lvl TODO
-
-example chain with super blocks and actual merkle tree proof for interlink and tree with examples (mock 16-bit values) TODO
+Thus in order to save space, we only include a commitment to the interlink in our transactions. Specifically, we take the Merkle Tree root of the Merkle Tree with leafs the block hashes starting from level $0$ up to $\infty$. This way, our interlink encoding is constant size and we can easily provide compact proofs for any of the levels.
 
 \section{Discoverability}
 We've talked about how just including the interlink somewhere on a block is what really matters but it is crucial that we make this information easy to discover. We achieve this in two ways. First, we include the interlink commitment inside a special \code{OP\_RETURN} output. Such outputs are already being used for storing arbitrary data in blocks~\cite{arbitrary-data} therefore we adopt this method for storing our interlinks. Second, we aim to make this interlink discoverable for lite nodes, so we don't require our users to download a whole block in order to look into it. We achieve this by utilizing a method called \emph{SPV tagged outputs}~\cite{spv-tagged}.
@@ -67,9 +76,7 @@ We provide two implementations of an interlinker which both run in production. W
 \section{Bitcoin-ABC}
 Our first implementation is built on top of Bitcoin-ABC. Bitcoin-ABC is the reference implementation for Bitcoin Cash in C++. It is a fork of the original Bitcoin codebase (now Bitcoin Core), and it was the first ever implementation to support Bitcoin Cash. It has a very active community of developers and users. Due to its heritage from Bitcoin Core the code is very well written and tested, and any new feature for the Bitcoin Cash chain appears on Bitcoin-ABC first.
 
-We run Bitcoin-ABC as a full node and interface with it using JSON-RPC. The interlinker is a Python module which knows (a) the location and credentials to connect with the full node and (b) the velvet fork genesis block id (TODO major explain).
-
-TODO which genesis we picked
+We run Bitcoin-ABC as a full node and interface with it using JSON-RPC. The interlinker is a Python module which knows (a) the location and credentials to connect with the full node and (b) the velvet fork genesis block id.
 
 After the interlinker makes sure the full node is fully synced it starts waiting for new blocks. As described above we need our interlinker to get notified whenever there's a new block so that it can send a transaction with the new interlink for inclusion in the upcoming block. There's two options to get notified for new blocks from a full node.
 
@@ -81,11 +88,6 @@ In case there's a new block, the interlinker will promptly compute the correct i
 
 It is important to note here that in order to send the transactions, the interlinker has to pay transaction fees as seen earlier. However, we haven't talked about the interlinker controlling a wallet or private keys which would make it seem like there is no way to fund the transactions. Because of how the JSON-RPC methods work we don't need to specify a private key or wallet external to the full node and we can let the full node create and pay for our transactions using its default wallet. Thus the way to fund the interlinker is to fund the default wallet of the full node.
 
-show transaction TODO
-show transaction chain TODO
-velvet txs in in correct block confirmed later TODO
-
-code for interlink calculation TODO
 code snippets TODO
 
 \section{bcash}
