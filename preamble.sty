@@ -179,3 +179,11 @@
 \MakeRobust{\Call}
 
 \def\code#1{\texttt{#1}}
+\newcommand{\pdffigure}[2]{
+  \begin{figure}
+    \centering
+    \includegraphics[width=0.9\columnwidth,keepaspectratio]{figures/#1.pdf}
+    \caption{#2}
+    \label{fig:#1}
+  \end{figure}
+}
