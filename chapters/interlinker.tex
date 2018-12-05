@@ -15,12 +15,7 @@ A naive encoding would be one where each 32-byte block hash from level $0$ up to
 For 35 levels, which according to Figure~\ref{fig:bitcoin-cash-testnet-levels-after-velvet-genesis} is a reasonable figure, this encoding would take approximately 1.12KB.
 Considering that \code{OP\_RETURN} scripts are limited in size to 223 bytes, this would only allow us to include up to 6 pointers at best.
 
-\begin{figure}
-  \centering
-  \includegraphics[width=0.9\columnwidth,keepaspectratio]{figures/bitcoin-cash-testnet-levels-after-velvet-genesis.pdf}
-  \caption{Number of levels assuming our selected velvet genesis.}
-  \label{fig:bitcoin-cash-testnet-levels-after-velvet-genesis}
-\end{figure}
+\pdffigure{bitcoin-cash-testnet-levels-after-velvet-genesis}{Number of levels assuming our selected velvet genesis.}
 
 Putting this limitation aside, the fee of the transaction is proportional to the transaction size, and since we're going to be sending a transaction for every block (which is mined approximately every 10 minutes), it is important that the fee is minimized.
 
@@ -33,12 +28,7 @@ SPV tagged outputs are outputs that are tagged so that they can be discovered by
 
 The tag we use for our transactions is \code{696e7465726c696e6b}, which is the ASCII encoding of \code{interlink}. An example of such a real-world velvet transaction created by our deployed interlinker on the Bitcoin Cash testnet can be seen on Figure~\ref{fig:actual-velvet-tx}.
 
-\begin{figure}
-  \centering
-  \includegraphics[width=0.9\columnwidth,keepaspectratio]{figures/actual-velvet-tx.png}
-  \caption{An actual velvet fork transaction.}
-  \label{fig:actual-velvet-tx}
-\end{figure}
+\pngfigure{actual-velvet-tx}{An actual velvet fork transaction.}
 
 \section{Fault Tolerance}
 It is important to note that the interlinker works on a best-effort basis. Due to the nature of Velvet Forks though, no failure is fatal. The types of failures are as follows:
@@ -100,20 +90,10 @@ docker images
 docker-compose
 
 \section{Experimental Data}
-\begin{figure}
-  \centering
-  \includegraphics[width=0.9\columnwidth,keepaspectratio]{figures/testnet-deployment-reliability.pdf}
-  \caption{Reliability of our testnet deployment.}
-  \label{fig:testnet-deployment-reliability}
-\end{figure}
+\pdffigure{testnet-deployment-reliability}{Reliability of our testnet deployment.}
 
 We will now examine real-world data gathered from our Bitcoin Cash testnet deployment. On Figure~\ref{fig:testnet-deployment-reliability} we can look at the reliability of our interlinker deployment. We can see that about 60\% of the blocks have been correctly interlinked with our velvet transactions, and about 10\% of them only have 1 interlink pointer missing, which makes them potentially usable. With $\infty$ we denote the case where all pointers are missing due to a block only having incorrect interlinks or no interlinks at all.
 
-\begin{figure}
-  \centering
-  \includegraphics[width=0.9\columnwidth,keepaspectratio]{figures/bitcoin-cash-testnet-levels.pdf}
-  \caption{Level distribution on Bitcoin Cash testnet.}
-  \label{fig:bitcoin-cash-testnet-levels}
-\end{figure}
+\pdffigure{bitcoin-cash-testnet-levels}{Level distribution on Bitcoin Cash testnet.}
 
 On Figure~\ref{fig:bitcoin-cash-testnet-levels} we see the level distribution on the Bitcoin Cash testnet. As expected, the level growth is logarithmic compared to the chain length.

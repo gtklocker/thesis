@@ -179,11 +179,13 @@
 \MakeRobust{\Call}
 
 \def\code#1{\texttt{#1}}
-\newcommand{\pdffigure}[2]{
+\newcommand{\easyfigure}[3]{
   \begin{figure}
     \centering
-    \includegraphics[width=0.9\columnwidth,keepaspectratio]{figures/#1.pdf}
-    \caption{#2}
-    \label{fig:#1}
+    \includegraphics[width=0.9\columnwidth,keepaspectratio]{figures/#2.#1}
+    \caption{#3}
+    \label{fig:#2}
   \end{figure}
 }
+\newcommand{\pdffigure}[2]{ \easyfigure{pdf}{#1}{#2} }
+\newcommand{\pngfigure}[2]{ \easyfigure{png}{#1}{#2} }
