@@ -48,7 +48,7 @@ We will study how these failures can be mitigated in the next section.
 \section{Viability}
 Making the operation of the interlinker affordable is key in order to allow many parties to run it. We will estimate the cost of operation now.
 
-Our transaction size ($\sf txBytes$) is constant at exactly 244 bytes. The median Bitcoin Cash fee per byte ($\sf feePerByte$) at the time of writing (November 2018) is 1 satoshi. Multiplied by our transaction size this gives us a transaction fee ($\sf txFee = txBytes * feePerByte$) of 244 satoshis.
+Our transaction size ($\sf txBytes$) is constant at exactly 244 bytes. The median Bitcoin Cash fee per byte ($\sf feePerByte$) at the time of writing (November 2018) is 1 satoshi. Multiplied by our transaction size this gives us a transaction fee ($\sf txFee = txBytes * feePerByte$) of 244 satoshis.  Our complete estimations based on the current price of Bitcoin Cash can be seen on Table~\ref{tbl:cost-analysis}.
 
 \begin{table}
   \centering
@@ -61,6 +61,8 @@ Our transaction size ($\sf txBytes$) is constant at exactly 244 bytes. The media
     Year & $\sf perMonth * 12$ & 46.8€ \\
     \hline
   \end{tabular}
+  \caption{Cost analysis of operating an interlinker on the Bitcoin Cash mainnet.}
+  \label{tbl:cost-analysis}
 \end{table}
 
 We provide two implementations of an interlinker which both run in production. We'll now look at the pros and cons of each.
