@@ -70,7 +70,7 @@ We provide two implementations of an interlinker which both run in production. W
 \section{Bitcoin-ABC}
 Our first implementation is built on top of Bitcoin-ABC. Bitcoin-ABC is the reference implementation for Bitcoin Cash in C++. It is a fork of the original Bitcoin codebase (now Bitcoin Core), and it was the first ever implementation to support Bitcoin Cash. It has a very active community of developers and users. Due to its heritage from Bitcoin Core the code is very well written and tested, and any new feature for the Bitcoin Cash chain appears on Bitcoin-ABC first.
 
-We run Bitcoin-ABC as a full node and interface with it using JSON-RPC. The interlinker is a Python module which knows (a) the location and credentials to connect with the full node and (b) the velvet fork genesis block id.
+We run Bitcoin-ABC as a full node and interface with it using JSON-RPC. The interlinker is a Python module which knows (a) the location and credentials to connect with the full node and (b) the velvet fork genesis block id. We use the python-bitcoinrpc library~\cite{python-bitcoinrpc} for the JSON-RPC communication.
 
 After the interlinker makes sure the full node is fully synced it starts waiting for new blocks. As described above we need our interlinker to get notified whenever there's a new block so that it can send a transaction with the new interlink for inclusion in the upcoming block. There's two options to get notified for new blocks from a full node.
 
@@ -105,9 +105,57 @@ We also see the use of \code{shelve} on the code below. \code{shelve} is a Pytho
     logger.info('velvet tx "%s"', send_velvet_tx(new_interlink.hash()))
 \end{lstlisting}
 
-It is important to note here that in order to send the transactions, the interlinker has to pay transaction fees as seen earlier. However, we haven't talked about the interlinker controlling a wallet or private keys which would make it seem like there is no way to fund the transactions. Because of how the JSON-RPC methods work we don't need to specify a private key or wallet external to the full node and we can let the full node create and pay for our transactions using its default wallet. Thus the way to fund the interlinker is to fund the default wallet of the full node.
+\subsection{Calculating the Interlink}
 
-code snippets TODO
+The naive way to calculate the interlink would be starting from the velvet genesis block to keep a running interlink and sequentially update it. Considering that between the tip and the velvet genesis there could be millions of blocks, and for each block we need to issue a JSON-RPC call to get its block hash by using \code{getblockhash}. We experimentally found this method to take upwards of 15 seconds for approximately 15000 blocks, averaging at 1000 blocks/second.
+
+To make this process faster we cache all interlinks we compute. This caching happens inside the \code{store} shown in the code below. \code{store} is a dictionary which maps block ids to their corresponding interlinks. In order to compute an interlink for a given tip we traverse the blockchain from the tip until we end up at a block for which the interlink is already available. We always ensure the cache contains at least the interlink for the velvet genesis which is empty and only contains the genesis pointer (of level $\infty$). We keep the block ids between the tip and the block with the cached interlink and then proceed to update the interlink that was found with each intermediate block id, in order. In doing so we also save each interlink we compute to its corresponding block id in the store, so that it will be available if we ever need it again. After the interlink has been updated with all blocks we are done and we can return it as the final result.
+
+\begin{lstlisting}[language=Python]
+def interlink(tip_id, store=None):
+    store = {} if store is None else store
+    intermediate_block_ids = deque()
+    intermediate_id = tip_id
+    if VELVET_FORK_GENESIS not in store:
+        store[VELVET_FORK_GENESIS] = genesis_interlink()
+    while intermediate_id not in store:
+        intermediate_block_ids.appendleft(intermediate_id)
+        intermediate_id = prev(intermediate_id)
+
+    intermediate_interlink = store[intermediate_id]
+    for block_id in intermediate_block_ids:
+        intermediate_interlink = store[block_id] = \
+                intermediate_interlink.update(block_id, level(block_id))
+    return intermediate_interlink
+\end{lstlisting}
+
+\subsection{Velvet Transactions}
+
+For creating the SPV tagged outputs we utilize the python-bitcoinlib library~\cite{python-bitcoinlib}. We construct the outputs array including a single script with the \code{OP\_RETURN}, our SPV tag which is the ASCII encoding for \code{interlink} and our payload which we expect to be our interlink commitment. We then serialize a transaction with this output.
+
+\begin{lstlisting}[language=Python]
+from bitcoin.core import CMutableTxOut, CScript, CMutableTransaction, OP_RETURN
+def create_raw_velvet_tx(payload_buf):
+    VELVET_FORK_MARKER = b'interlink'
+    digest_outs = [CMutableTxOut(0, CScript([OP_RETURN, VELVET_FORK_MARKER, payload_buf]))]
+    tx = CMutableTransaction([], digest_outs)
+    return tx.serialize().hex()
+\end{lstlisting}
+
+The next stage is to actually send the transaction. Of course a transaction with only one output is incomplete and invalid. In order to fill it in with the appropriate inputs and change output we turn to our Bitcoin-ABC node. We use the \code{fundrawtransaction} JSON-RPC method in order to do all the above. We then only have to sign and send the transaction out in the network.
+
+\begin{lstlisting}[language=Python]
+def send_velvet_tx(payload_buf):
+    change_address = rpc.getaccountaddress("")
+    funded_raw_tx = rpc.fundrawtransaction(create_raw_velvet_tx(payload_buf),
+            {'changeAddress': change_address})['hex']
+    signed_funded_raw_tx = rpc.signrawtransaction(funded_raw_tx)['hex']
+    return rpc.sendrawtransaction(signed_funded_raw_tx)
+\end{lstlisting}
+
+\subsection{Funding}
+
+It is important to note here that in order to send the transactions, the interlinker has to pay transaction fees as seen earlier. However, we haven't talked about the interlinker controlling a wallet or private keys which would make it seem like there is no way to fund the transactions. Because of how the JSON-RPC methods work we don't need to specify a private key or wallet external to the full node and we can let the full node create and pay for our transactions using its default wallet. Thus the way to fund the interlinker is to fund the default wallet of the full node.
 
 \section{bcash}
 The second implementation is build on top of the bcash JavaScript library. bcash implements a full node and wallet functionality exclusively in JavaScript without being based on the Bitcoin C++ codebase as did most previous solutions. A major advantage of bcash is that it implements an SPV node too, which is very useful since the interlinker only needs the block ids of the chain but doesn't care about the block contents, so requiring a full node to run it would be a waste of space and bandwidth.
