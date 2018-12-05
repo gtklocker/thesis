@@ -74,11 +74,36 @@ We run Bitcoin-ABC as a full node and interface with it using JSON-RPC. The inte
 
 After the interlinker makes sure the full node is fully synced it starts waiting for new blocks. As described above we need our interlinker to get notified whenever there's a new block so that it can send a transaction with the new interlink for inclusion in the upcoming block. There's two options to get notified for new blocks from a full node.
 
+\subsection{Block Discovery}
+
 The first option is to utilize the ZeroMQ~\cite{zmq} functionality of Bitcoin-ABC. If compiled with the appropriate flags, Bitcoin-ABC can create a ZeroMQ channel where it will send notifications for new blocks and transactions. While the method seems very modern, it has some pitfalls. The main pitfall is race conditions: it is possible that the node pushes out a ZeroMQ notification about a block, however that block has not finished saving in the node's database, causing an immediate \code{getblock} request on the block to fail. Also, the ZeroMQ functionality is not enabled by default: one needs to compile the node with specific flags. While both issues are not fatal, in order to keep the interlinker as compatible with existing nodes as possible and to avoid workarounds we decided against using this functionality.
 
-What we ended up using is busy polling through JSON-RPC with the \code{getbestblockhash} method. Every 5 seconds the interlinker will check the best block hash and if it doesn't match the one previously given then this means that there's been a new block. The interval can be configured should one desire not to cause much strain to their system.
+What we ended up using is busy polling through JSON-RPC with the \code{getbestblockhash} method. Every 5 seconds the interlinker will check the best block hash and if it doesn't match the one previously given then this means that there's been a new block.
+
+\begin{lstlisting}[language=Python]
+tip_id = ''
+while True:
+    possibly_new_tip_id = rpc.getbestblockhash()
+    if possibly_new_tip_id == tip_id:
+        sleep(NEW_TIP_CHECK_INTERVAL_SECONDS)
+        continue
+    tip_id = possibly_new_tip_id
+\end{lstlisting}
+
+\subsection{Reaction to a New Block}
 
 In case there's a new block, the interlinker will promptly compute the correct interlink for it, by updating the interlink with all the intermediate blocks from the velvet fork genesis up to and including the new block. It will then compute the Merkle Tree root and include it in an SPV tagged output. It will then wrap the output inside a change transaction and send it to the network.
+
+We also see the use of \code{shelve} on the code below. \code{shelve} is a Python library which allows us to persist Python objects on disk and access them on demand. We will see promptly how we utilize \code{shelve} to act as a database of computed interlinks in order to speed up our computations.
+
+\begin{lstlisting}[language=Python]
+    logger.info('new block "%s"', tip_id)
+    with shelve.open(db_path) as db:
+        new_interlink = interlink(tip_id, db)
+    logger.debug('new interlink "%s"', new_interlink)
+    logger.info('mtr hash "%s"', new_interlink.hash().hex())
+    logger.info('velvet tx "%s"', send_velvet_tx(new_interlink.hash()))
+\end{lstlisting}
 
 It is important to note here that in order to send the transactions, the interlinker has to pay transaction fees as seen earlier. However, we haven't talked about the interlinker controlling a wallet or private keys which would make it seem like there is no way to fund the transactions. Because of how the JSON-RPC methods work we don't need to specify a private key or wallet external to the full node and we can let the full node create and pay for our transactions using its default wallet. Thus the way to fund the interlinker is to fund the default wallet of the full node.
 
