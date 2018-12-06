@@ -31,8 +31,11 @@ Now that we have a way to go back on a level, we can utilize it to construct the
 
 \input{algorithms/alg.nipopow-velvet-upchain.tex}
 
-\section{bcash}
+\section{JavaScript implementation with bcash}
 bcash, also used for the interlinker earlier, turns out the be the only option for an SPV node on Bitcoin Cash, making it the obvious choice for the prover.
 
-\section{Testing}
+\subsection{Type Safety}
+Flow~\cite{flow} was used.
+
+\subsection{Testing}
 Due to the real-time and asynchronous nature of the prover it's important that our implementation is resilient and bug-free. In order to assert that the code has been thoroughly unit tested, boasting a code coverage of >90\%. The tests are written and run with Jest. There are also integration tests using real-world data.
