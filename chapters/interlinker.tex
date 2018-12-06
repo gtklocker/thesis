@@ -67,7 +67,7 @@ Our transaction size ($\sf txBytes$) is constant at exactly 244 bytes. The media
 
 We provide two implementations of an interlinker which both run in production. We'll now look at the pros and cons of each.
 
-\section{Bitcoin-ABC}
+\section{Python \& Bitcoin-ABC Implementation}
 Our first implementation is built on top of Bitcoin-ABC. Bitcoin-ABC is the reference implementation for Bitcoin Cash in C++. It is a fork of the original Bitcoin codebase (now Bitcoin Core), and it was the first ever implementation to support Bitcoin Cash. It has a very active community of developers and users. Due to its heritage from Bitcoin Core the code is very well written and tested, and any new feature for the Bitcoin Cash chain appears on Bitcoin-ABC first.
 
 We run Bitcoin-ABC as a full node and interface with it using JSON-RPC. The interlinker is a Python module which knows (a) the location and credentials to connect with the full node and (b) the velvet fork genesis block id. We use the python-bitcoinrpc library~\cite{python-bitcoinrpc} for the JSON-RPC communication.
