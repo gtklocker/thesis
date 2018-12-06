@@ -239,6 +239,60 @@ def send_velvet_tx(payload_buf):
 
 It is important to note here that in order to send the transactions, the interlinker has to pay transaction fees as seen earlier. However, we haven't talked about the interlinker controlling a wallet or private keys which would make it seem like there is no way to fund the transactions. Because of how the JSON-RPC methods work we don't need to specify a private key or wallet external to the full node and we can let the full node create and pay for our transactions using its default wallet. Thus the way to fund the interlinker is to fund the default wallet of the full node.
 
+\subsection{Testing}
+
+The code is thoroughly unit-tested using pytest~\cite{pytest}. The Interlink implementation is a very crucial part of our implementation and is tested as follows.
+
+\begin{lstlisting}[language=Python]
+from interlink import Interlink
+
+def test_interlink():
+    interlink = Interlink(genesis=b'\x01')
+    interlink = interlink.update('0c', 5)
+    interlink = interlink.update('0b', 4)
+    interlink = interlink.update('0a', 2)
+    assert interlink.as_array() == [b'\x0a', b'\x0a', b'\x0a', b'\x0b', b'\x0b', b'\x0c', b'\x01']
+
+def test_interlink_cascading():
+    interlink = Interlink(genesis=b'\x02')
+    interlink = interlink.update('0a', 2)
+    interlink = interlink.update('0b', 4)
+    interlink = interlink.update('0c', 5)
+    assert interlink.as_array() == [b'\x0c'] * 6 + [b'\x02']
+
+def test_interlink_str():
+    assert str(Interlink(genesis=b'\x02')) == '[1 * 02]'
+\end{lstlisting}
+
+The Bitcoin-style Merkle Trees are also very important to get right. To this end we generate testcases adapted from actual Bitcoin blocks by making sure the merkle tree root of their transaction ids matches the one found in the block. We also make sure to also test the boundaries (for example having 0 and 1 leafs).
+
+\begin{lstlisting}[language=Python]
+import pytest
+import json
+
+from merkle import mtr
+
+def do_test_fixture(fixture_path):
+    with open(fixture_path, 'r') as f:
+        fixture = json.load(f)
+    expected_merkleroot = bytes.fromhex(fixture['merkleroot'])[::-1]
+    txs = [bytes.fromhex(tx_id)[::-1] for tx_id in fixture['txs']]
+    assert mtr(txs) == expected_merkleroot
+
+def test_bitcoin_block_100():
+    do_test_fixture('./fixtures/merkle/bitcoin_block_100.json')
+
+def test_bitcoin_cash_testnet_2_txs():
+    do_test_fixture('./fixtures/merkle/bitcoin_cash_testnet_2_txs.json')
+
+def test_bitcoin_cash_testnet_big():
+    do_test_fixture('./fixtures/merkle/bitcoin_cash_testnet_1259110.json')
+
+def test_no_leafs():
+    with pytest.raises(AssertionError):
+        mtr([])
+\end{lstlisting}
+
 \section{bcash}
 The second implementation is build on top of the bcash JavaScript library. bcash implements a full node and wallet functionality exclusively in JavaScript without being based on the Bitcoin C++ codebase as did most previous solutions. A major advantage of bcash is that it implements an SPV node too, which is very useful since the interlinker only needs the block ids of the chain but doesn't care about the block contents, so requiring a full node to run it would be a waste of space and bandwidth.
 
