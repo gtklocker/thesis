@@ -96,7 +96,9 @@ Instead of keeping only the hash of the previous block inside the block header, 
 
 It's important to note that the interlink can be encoded as a series of block ids, starting from $0$ up to $\infty$. It can also be compressed by using this series as the leafs of a Merkle tree and taking the Merkle tree root.
 
-update interlink TODO
+Suppose we have a block $B'$ with an interlink stored as $B'.{\sf interlink}$. In order to produce the interlink for a block after $B'$ we make sure to change all pointers from level $0$ up to $level(B')$ to point to $B'$, as $B'$ will be the most recent block at these levels (remember that a block of level $\mu$ is also of level $\mu-1$). We call this procedure {\sf updateInterlink}, which can be seen in detail on Algorithm~\ref{alg.nipopow-interlink}.
+
+\input{algorithms/alg.nipopow-interlink.tex}
 
 \subsection{Suffix Proofs}
 Suffix proofs are parameterized by $k$ and $m$. $k$ refers to the number of blocks that need to bury a block for it to be considered stable.
