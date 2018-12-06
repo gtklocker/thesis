@@ -307,8 +307,146 @@ We also rely on docker-compose~\cite{docker-compose} in order to make deployment
 
 We release the code as open-source under the MIT license. We regard this implementation as production-ready software. The source code is released on Github (todo) and there are prebuilt Docker images available to make deployment very easy.
 
-\section{bcash}
-The second implementation is build on top of the bcash JavaScript library. bcash implements a full node and wallet functionality exclusively in JavaScript without being based on the Bitcoin C++ codebase as did most previous solutions. A major advantage of bcash is that it implements an SPV node too, which is very useful since the interlinker only needs the block ids of the chain but doesn't care about the block contents, so requiring a full node to run it would be a waste of space and bandwidth.
+\section{JavaScript implementation with bcash}
+The second implementation is build on top of the bcash JavaScript library. bcash implements a full node and wallet functionality exclusively in JavaScript without being based on the Bitcoin C++ codebase as did most previous solutions. A major advantage of bcash is that it implements an SPV node too, which is very useful since the interlinker only needs the block ids of the chain but doesn't need to know about the block contents, so requiring a full node to run it would be a waste of space and bandwidth.
+
+\subsection{Architecture}
+The bcash architecture is a departure from the JSON-RPC paradigm described above and requires some explanation. One major difference is that this implementation doesn't require an external node: the interlinker is a standalone program which due to the bcash library is also an SPV node. bcash offers Node classes which are standalone nodes. Apart from SPV it also offers a \code{FullNode} class.
+
+Let's focus on \code{SPVNode} for now. The node is mainly composed of the following subcomponents:
+
+\begin{itemize}
+  \item A \code{chain} object which holds the current blockchain.
+  \item A \code{pool} object which is used for bidirectional communication with other nodes in the network.
+  \item A \code{mempool} object which holds the unconfirmed transactions in the network.
+\end{itemize}
+
+These components are the ones crucial for the node to function. bcash offers more functionality for nodes such as JSON-RPC and HTTP APIs, which we will not make use of.
+
+bcash is designed to be very modular so not much logic is found within its \code{Node} classes, as they only wire the components they are composed of together. The architecture is ripe for such wiring as bcash makes heavy use of the event system JavaScript is known for.
+
+What we implement is an \code{InterlinkerNode} class which augments the functionality of \code{SPVNode} by extending it.
+
+\subsection{Block Discovery}
+bcash makes it very easy to know when a new block has been discovered: its \code{SPVNode} class offers a \code{block} event that we can listen on for new blocks.
+
+\begin{lstlisting}[language=js]
+    this.on('block', async (blk) => {
+      this.ourLogger.info('got block event (blkid=%s, height=%d)', blk.rhash(), blk.height);
+      await this.doInterlink();
+    });
+\end{lstlisting}
+
+\subsection{Synchronization}
+Sending velvet transactions while we still are not completely synced is not desired behavior. Unfortunately, bcash does not provide any mechanism in order to know when the Initial Block Download is complete.
+
+We work around this by use of debounce. First we should explain what debounce is: when we debounce a function \code{foo} we should also provide a delay in milliseconds. For example we could do \code{bar = debounce(foo, 1000)} where \code{bar} is a new function. We can then call \code{bar} with the exact same arguments we would \code{foo}, however debouncing makes it so that \code{foo} will only be called after 1000 milliseconds have passed since the last call to \code{bar}. This technique is usually utilized to avoid having a user double-click a button perform a destructive action twice. It's useful here because we can have a function \code{onSync} that we debounce and now call \code{maybeSync}. We attach \code{maybeSync} to the \code{block} event we saw earlier. We assume that when our node is not synced we can expect multiple subsequent \code{block} events. We guard against these events because of the debounce. When we're satisfied that enough time with no events occurring has passed, finally \code{onSync} is actually called, which removes the \code{maybeSync} handler and sets the final handler to interlink on each block that we saw previously.
+
+It is important to note that this is only a heuristic but it has proven to work well enough during our testing.
+
+\begin{lstlisting}[language=js]
+  onSync() {
+    this.ourLogger.info('chain synced');
+    this.wallet = this.walletDB.primary;
+    this.removeListener('block', this.maybeSynced);
+    this.on('block', async (blk) => {
+      this.ourLogger.info('got block event (blkid=%s, height=%d)', blk.rhash(), blk.height);
+      await this.doInterlink();
+    });
+    this.doInterlink().then();
+  }
+\end{lstlisting}
+
+\subsection{Reaction to a New Block}
+
+Whenever a new block occurs we calculate the interlink and send a transaction with its commitment just as before. This code looks almost identical in form to the previous implementation: we compute the interlink, calculate the commitment, create a transaction with a tagged SPV output and send it. Here \code{wallet.send} additionally takes care of the funding we saw in the previous implementation.
+
+\begin{lstlisting}[language=js]
+  async doInterlink() {
+    const interlink = await this.getInterlinkSinceBlock(VELVET_GENESIS);
+    const hash = interlink.hash();
+
+    this.ourLogger.info('interlink hash = %s', hash.toString('hex'));
+    try {
+      const tx = await this.wallet.send({
+        outputs: [bcash.Output.fromScript(taggedSPVOutput(hash), 0)],
+      });
+      this.ourLogger.info('sent tx (txid=%s)', revHex(tx.hash()));
+    } catch (e) {
+      this.ourLogger.error(e);
+      this.ourLogger.error('not enough funds to publish interlink tx');
+      this.ourLogger.error('feed me: %s', await this.wallet.receiveAddress());
+      return;
+    }
+  }
+\end{lstlisting}
+
+\subsection{Calculating the Interlink}
+Here we implement the naive approach that we discussed in the previous implementation for calculating the interlink. We can safely do this as there are no speed concerns, seeing that we have direct access to our chain and no JSON-RPC calls need to transpire here. This makes this procedure almost instant.
+
+\begin{lstlisting}[language=js]
+  async getInterlinkSinceBlock(blockId) {
+    const interlink = new Interlink();
+    let blk = await this.chain.getEntryByHash(blockId);
+    let blockCount = 0;
+    let lastBlock = blk;
+    while (blk) {
+      ++blockCount;
+      lastBlock = blk;
+      interlink.update(blk.hash);
+      blk = await this.chain.getNextEntry(blk);
+    }
+    this.ourLogger.info('saw %d blocks', blockCount);
+    this.ourLogger.info('last block (id=%s, height=%d)', revHex(lastBlock.hash), lastBlock.height);
+    return interlink;
+  }
+\end{lstlisting}
+
+\subsection{Interlink Representation}
+In similar fashion to the previous implementation we represent the interlink as a Plain Old JavaScript Object. Note that here our \code{update} is destructive in contrast as we don't utilize the immutability for caching.
+
+\begin{lstlisting}[language=js]
+class Interlink {
+  constructor() {
+    this.list = [];
+  }
+
+  update(blockId) {
+    const lvl = level(blockId, MAX_TARGET);
+    for (let i = 0; i <= lvl; ++i) {
+      if (i < this.list.length)
+        this.list[i] = blockId;
+      else
+        this.list.push(blockId);
+    }
+  }
+}
+\end{lstlisting}
+
+Calculating the commitment here is much easier here, as bcash provides as with a good API for creating and manipulating Bitcoin-style Merkle Trees.
+
+\begin{lstlisting}[language=js]
+  hash() {
+    return merkle.createRoot(hash256, [...this.list])[0];
+  }
+\end{lstlisting}
+
+\subsection{Velvet Transactions}
+We create SPV tagged outputs by leveraging the Script API offered by bcash. All we need to do is simply create an empty script and then push in sequence an \code{OP\_RETURN}, our SPV tag and then the payload.
+
+\begin{lstlisting}[language=js]
+const {Script, MTX} = require('bcash');
+
+const SPV_TAG = Buffer.from('interlink');
+
+module.exports = function taggedSPVOutput(buffer) {
+  const script = new Script();
+  script.pushOp(Script.opcodes.OP_RETURN);
+  script.pushData(SPV_TAG);
+  script.pushData(buffer);
+  return script.compile();
+};
+\end{lstlisting}
 
 \section{Deployment}
 At the time of writing of this thesis, both interlinkers run in production on the Bitcoin Cash testnet chain and have been for over 2 months. We started with our first deployment late September 2018, with the first prototype of our Python interlinker. This gave us a chance to catch bugs that only appear on long running processes and make sure our software is resilient to network and other library failures. As new features and bug fixes kept rolling in our software we continuously updated the deployments.
