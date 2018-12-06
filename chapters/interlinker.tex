@@ -305,7 +305,8 @@ We also rely on docker-compose~\cite{docker-compose} in order to make deployment
 
 \subsection{Distribution}
 
-We release the code as open-source under the MIT license. We regard this implementation as production-ready software. The source code is released on Github (todo) and there are prebuilt Docker images available to make deployment very easy.
+Our software is production-grade and we release it under the open source MIT license.
+\footnote{The code is available at \url{https://github.com/decrypto-org/bch-interlinker}}.
 
 \section{JavaScript implementation with bcash}
 The second implementation is build on top of the bcash JavaScript library. bcash implements a full node and wallet functionality exclusively in JavaScript without being based on the Bitcoin C++ codebase as did most previous solutions. A major advantage of bcash is that it implements an SPV node too, which is very useful since the interlinker only needs the block ids of the chain but doesn't need to know about the block contents, so requiring a full node to run it would be a waste of space and bandwidth.
@@ -447,6 +448,11 @@ module.exports = function taggedSPVOutput(buffer) {
   return script.compile();
 };
 \end{lstlisting}
+
+\subsection{Distribution}
+
+Our software is production-grade and we release it under the open source MIT license.
+\footnote{The code is available at \url{https://github.com/gtklocker/bcash-interlinker-js}}.
 
 \section{Deployment}
 At the time of writing of this thesis, both interlinkers run in production on the Bitcoin Cash testnet chain and have been for over 2 months. We started with our first deployment late September 2018, with the first prototype of our Python interlinker. This gave us a chance to catch bugs that only appear on long running processes and make sure our software is resilient to network and other library failures. As new features and bug fixes kept rolling in our software we continuously updated the deployments.
