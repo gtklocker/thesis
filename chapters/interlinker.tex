@@ -297,6 +297,16 @@ def test_no_leafs():
         mtr([])
 \end{lstlisting}
 
+\subsection{Docker}
+
+In order to minimize the dependencies and complexity of running this software we rely on the industry standard, Docker~\cite{docker}. With Docker we specify the steps required to build an image with all required dependencies that acts like an executable. Docker also allows our service to run in an isolated sandbox without access to the rest of the host system.
+
+We also rely on docker-compose~\cite{docker-compose} in order to make deployments easy, having a single configuration which describes how the ABC node and our interlinker should be wired together in order to work well. All in all, this makes for a very quick and painless deployment process, allowing any interested party to run the interlinker on their own.
+
+\subsection{Distribution}
+
+We release the code as open-source under the MIT license. We regard this implementation as production-ready software. The source code is released on Github (todo) and there are prebuilt Docker images available to make deployment very easy.
+
 \section{bcash}
 The second implementation is build on top of the bcash JavaScript library. bcash implements a full node and wallet functionality exclusively in JavaScript without being based on the Bitcoin C++ codebase as did most previous solutions. A major advantage of bcash is that it implements an SPV node too, which is very useful since the interlinker only needs the block ids of the chain but doesn't care about the block contents, so requiring a full node to run it would be a waste of space and bandwidth.
 
