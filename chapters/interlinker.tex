@@ -297,12 +297,6 @@ def test_no_leafs():
         mtr([])
 \end{lstlisting}
 
-\subsection{Docker}
-
-In order to minimize the dependencies and complexity of running this software we rely on the industry standard, Docker~\cite{docker}. With Docker we specify the steps required to build an image with all required dependencies that acts like an executable. Docker also allows our service to run in an isolated sandbox without access to the rest of the host system.
-
-We also rely on docker-compose~\cite{docker-compose} in order to make deployments easy, having a single configuration which describes how the ABC node and our interlinker should be wired together in order to work well. All in all, this makes for a very quick and painless deployment process, allowing any interested party to run the interlinker on their own.
-
 \subsection{Distribution}
 
 Our software is production-grade and we release it under the open source MIT license.
@@ -455,10 +449,19 @@ Our software is production-grade and we release it under the open source MIT lic
 \footnote{The code is available at \url{https://github.com/gtklocker/bcash-interlinker-js}}.
 
 \section{Deployment}
-At the time of writing of this thesis, both interlinkers run in production on the Bitcoin Cash testnet chain and have been for over 2 months. We started with our first deployment late September 2018, with the first prototype of our Python interlinker. This gave us a chance to catch bugs that only appear on long running processes and make sure our software is resilient to network and other library failures. As new features and bug fixes kept rolling in our software we continuously updated the deployments.
+At the time of writing of this thesis, both implementations run in production on the Bitcoin Cash testnet chain and have been running for over 3 months. We started with our first deployment late September 2018, with the first prototype of our Python interlinker. This gave us a chance to catch bugs that only appear on long running processes and make sure our software is resilient to network and other library failures. As new features and bug fixes kept rolling in our software we continuously updated the deployments.
 
-docker images
-docker-compose
+\subsection{Docker}
+
+In order to minimize the dependencies and complexity of running this software we rely on the industry standard, Docker~\cite{docker}. With Docker we specify the steps required to build an image with all required dependencies that acts like an executable. Docker also allows our service to run in an isolated sandbox without access to the rest of the host system.
+
+We provide \code{Dockerfile}s for both our implementations.
+
+\subsection{docker-compose}
+
+We also rely on docker-compose~\cite{docker-compose} in order to make deployments easy, having a single configuration which describes for example how the ABC node and our Python interlinker should be wired together in order to work well. All in all, this makes for a very quick and painless deployment process, allowing any interested party to run the interlinker on their own. docker-compose was especially invaluable in painlessly keeping our deployment in sync with our continuously changing codebases.
+
+We provide reference \code{docker-compose.yml} files for both our implementations.
 
 \section{Experimental Data}
 \pdffigure{testnet-deployment-reliability}{Reliability of our testnet deployment.}
