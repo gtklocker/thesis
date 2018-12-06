@@ -35,7 +35,11 @@ Now that we have a way to go back on a level, we can utilize it to construct the
 bcash, also used for the interlinker earlier, turns out the be the only option for an SPV node on Bitcoin Cash, making it the obvious choice for the prover.
 
 \subsection{Type Safety}
-Flow~\cite{flow} was used.
+To ensure code quality we opted to use Flow~\cite{flow}. Flow allowed us to have type safety while keeping all the good characteristics of JavaScript. Unfortunately this introduced a couple of complications.
+
+One is that our source files are not valid JavaScript anymore. In order to run our code we need to pass it through a pre-processor like Babel which emits clean JavaScript that then Node can run.
+
+Another is that all the external libraries we use, including bcash are not written including Flow types. Flow does provide a repository with type definitions for popular packages, however due to the niche category of our dependencies only a few were covered. This meant that the burden was on us to write type definitions for our dependencies. We had to manually write type definitions for bcash and buffer-map. Thankfully, there is previous work~\footnote{Available at \url{https://github.com/OrfeasLitos/TrustIsRisk.js/blob/247c8b182f5bb4bed11df0d3b9136a3e27848798/flow-typed/npm/bcoin_vx.x.x.js}} on type definitions for bcoin which we were able to utilize and extend since the APIs are really similar as bcash is a fork of bcoin.
 
 \subsection{Testing}
-Due to the real-time and asynchronous nature of the prover it's important that our implementation is resilient and bug-free. In order to assert that the code has been thoroughly unit tested, boasting a code coverage of >90\%. The tests are written and run with Jest. There are also integration tests using real-world data.
+Due to the real-time and asynchronous nature of the prover it's important that our implementation is resilient and bug-free. In order to assert that the code has been thoroughly unit tested, boasting a code coverage of >90\%. The tests are written and run with Jest~\cite{jest}. There are also integration tests using real-world data.
