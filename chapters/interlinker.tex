@@ -239,6 +239,10 @@ def send_velvet_tx(payload_buf):
 
 It is important to note here that in order to send the transactions, the interlinker has to pay transaction fees as seen earlier. However, we haven't talked about the interlinker controlling a wallet or private keys which would make it seem like there is no way to fund the transactions. Because of how the JSON-RPC methods work we don't need to specify a private key or wallet external to the full node and we can let the full node create and pay for our transactions using its default wallet. Thus the way to fund the interlinker is to fund the default wallet of the full node.
 
+\subsection{Dependency Management}
+
+We utilize Pipenv~\cite{pipenv} for dependency management. Pipenv makes it easy to have a centralized file with a list of all dependencies, as well as a so-called lock file where each dependency is absolutely specified with a specific version and hash for its wheel file. It is great for reproducing the exact environment where the application is well-tested. It also makes installation of all dependencies very easy with just \code{pipenv install}.
+
 \subsection{Testing}
 
 The code is thoroughly unit-tested using pytest~\cite{pytest}. The Interlink implementation is a very crucial part of our implementation and is tested as follows.
