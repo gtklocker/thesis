@@ -1,21 +1,21 @@
 \begin{algorithm}[H]
-    \caption{\label{alg.nipopow-velvet-infix-go-back}The \textsf{goBack} function which produces the necessary blocks to connect a block $right$ to a preceeding block $left$.}
+    \caption{\label{alg.nipopow-velvet-infix-go-back}The \textsf{goBack} function which produces the necessary blocks to connect a block \textsf{right} to a preceeding block \textsf{left}.}
     \begin{algorithmic}[1]
-        \Function{\sf goBack}{$left$, $right$, \textsf{height}, \textsf{realLink}, \textsf{blockById}}
-            \State{$aux \gets \emptyset$}
-            \While{$right \neq left$}
-                \For{$\mu = level(left)$ down to $0$}
-                    \If{$\textsf{realLink}[\mathsf{id}(right)][\mu] = right\text{.interlink}[\mu]$}
-                        \Let{B'}{\textsf{blockById}[right\text{.interlink}[\mu]]}
-                        \If{$\textsf{height}[B'] \ge \textsf{height}[left]$}
-                            \Let{aux}{aux \cup \{B'\}}
-                            \Let{right}{B'}
+        \Function{\sf goBack}{\textsf{left}, \textsf{right}, \textsf{height}, \textsf{realLink}, \textsf{blockById}}
+            \State{$\sf aux \gets \emptyset$}
+            \While{$\mathsf{right} \neq \mathsf{left}$}
+                \For{$\mu = \mathsf{level(left)}$ down to $0$}
+                    \If{$\mathsf{realLink[id(right)]}[\mu] = \mathsf{right.interlink}[\mu]$}
+                        \Let{B}{\mathsf{blockById[right.interlink}[\mu]]}
+                        \If{$\mathsf{height}[B] \ge \mathsf{height[left]}$}
+                            \Let{\textsf{aux}}{\textsf{aux} \cup \{B\}}
+                            \Let{\textsf{right}}{B}
                             \State\textbf{break}
                         \EndIf
                     \EndIf
                 \EndFor
             \EndWhile
-            \State\Return{$aux$}
+            \State\Return{$\sf aux$}
         \EndFunction
     \vskip8pt
     \end{algorithmic}
