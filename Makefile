@@ -1,5 +1,5 @@
 paper.pdf: paper.tex bibliography.bib preamble.sty chapters/* figures/* algorithms/* deps/*
-	command -v latexrun 2>/dev/null && latexrun paper.tex || latexmk -pdf
+	if command -v latexrun 2>/dev/null; then latexrun paper.tex; else latexmk -pdf; fi
 
 .PHONY: clean
 clean:
