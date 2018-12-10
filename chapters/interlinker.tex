@@ -92,7 +92,7 @@ while True:
 
 \subsection{Reaction to a New Block}
 
-In case there's a new block, the interlinker will promptly compute the correct interlink for it, by updating the interlink with all the intermediate blocks from the velvet fork genesis up to and including the new block. It will then compute the Merkle Tree root and include it in an SPV tagged output. It will then wrap the output inside a change transaction and send it to the network.
+When there is a new block, the interlinker computes the correct interlink for it, by updating the interlink with all the intermediate blocks from the velvet fork genesis up to and including the new block. It then computes the Merkle Tree root and includes it in an SPV tagged output. Subsequently it wraps the output inside a change transaction and sends it to the network.
 
 We also see the use of \code{shelve} on the code below. \code{shelve} is a Python library which allows us to persist Python objects on disk and access them on demand. We will see promptly how we utilize \code{shelve} to act as a database of computed interlinks in order to speed up our computations.
 
