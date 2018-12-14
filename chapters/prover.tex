@@ -38,6 +38,182 @@ Now that we have a way to go back on a level, we can utilize it to construct the
 \section{JavaScript implementation with bcash}
 bcash, also used for the interlinker earlier, turns out the be the only option for an SPV node on Bitcoin Cash, making it the obvious choice for the prover.
 
+\subsection{Overview}
+Our prover works as follows. We expect a user to run the prover, passing as a parameter if they want a suffix or infix proof. If they desire an infix proof they have to provide the block of interest. Once they do that the prover runs and syncs with the Bitcoin Cash blockchain via SPV. It does some similar work to the work that an interlinker does: it knows what the correct interlink is for each block. It then checks the included commitments on each block and keeps a valid commitment for each block if found. A block containing a valid commitment is called a \emph{valid velvet}. Interlink pointers can only be used on valid velvets. Once the chain is synced and the prover knows the valid velvets along with the whole blockchain it creates a proof of the requested type and outputs it in JSON format.
+
+\subsection{Interlink Implementation}
+Implementing an interlink structure is something we've already covered many times. Our implementation here is based on immutable value objects holding the interlink. Updating an interlink is done in the usual manner and creates a new interlink. What's different here is that we have a \code{proof} method: we use this method to generate a proof of inclusion of a specific pointer in the interlink commitment. We also need a way to be able to get a pointer from a specific level on the interlink and this is accomplished with the \code{at} method. Note that \code{at} can be asked for a level higher than the size of the interlink, in which case the velvet genesis is returned as it's assumed to be a block of level $\infty$.
+
+\begin{lstlisting}[language=Javascript]
+class Interlink {
+  list: Array<BlockId>;
+  genesisId: BlockId;
+
+  constructor(genesisId: BlockId, list: Array<BlockId> = []) {
+    this.genesisId = genesisId;
+    this.list = list;
+  }
+
+  update(blockId: BlockId) {
+    const list = this.list.slice();
+    const lvl = level(blockId);
+    for (let i = 0; i <= lvl; ++i) {
+      if (i < list.length) list[i] = blockId;
+      else list.push(blockId);
+    }
+    return new Interlink(this.genesisId, list);
+  }
+
+  proof(level: number) {
+    return merkle.createBranch(hash256, level, [...this.list]);
+  }
+
+  hash() {
+    return merkle.createRoot(hash256, [...this.list])[0];
+  }
+
+  get length() {
+    return this.list.length;
+  }
+
+  at(lvl: number) {
+    if (lvl >= this.list.length) {
+      return this.genesisId;
+    }
+    return this.list[lvl];
+  }
+}
+\end{lstlisting}
+
+\subsection{Locating Velvet Transactions}
+Locating the velvet transactions is very easy considering that all our velvet transactions are SPV tagged. The only thing we have to do is add the SPV tag in our bloom filter. We do this right before connecting to the network.
+
+\begin{lstlisting}[language=Javascript]
+module.exports = class ProverNode extends bcash.SPVNode {
+  // ...
+  async connect() {
+    this.pool.watch(Buffer.from(VELVET_FORK_MARKER));
+    await super.connect();
+  }
+  // ...
+}
+\end{lstlisting}
+
+\subsection{Extracting Interlink Commitments}
+we have to check that the transaction the valid form described earlier (\code{OP\_RETURN <tag> <commitment>}). In order to do that we look at the outputs of each transaction and only keep any outputs of our form. If some output matches then we extract the script's third element which is the commitment.
+
+\begin{lstlisting}[language=Javascript]
+const extractInterlinkHashes = compose(
+  map(
+    compose(
+      head,
+      drop(1)
+    )
+  ),
+  filter(isInterlinkData),
+  map(
+    compose(
+      getCleanScriptData,
+      prop("script")
+    )
+  ),
+  filter(isBurnOutput),
+  prop("outputs")
+);
+\end{lstlisting}
+
+\subsection{Handling Merkle Blocks}
+When a block or transaction of a block matches our bloom filter, the block is relayed by full nodes as a \code{merkleblock} message. MerkleBlocks contain the header of the actual block as well as the transactions ids that matched. It also contains a proof of inclusion for all the transactions ids provided. One can check this proof of inclusion with accordance to the \code{merkleRoot} inside the block header. The transactions are included in subsequent \code{tx} messages. bcash hides this process from the user: on a new block event a MerkleBlock is provided and it contains a \code{txs} record, where the transactions that matched are included in full.
+
+In order to check if we have matched transactions in a block all we have to do is check if its \code{.txs} array is non-empty. If it is not then this block is definitely not a valid velvet. If it is not, then we have to ensure a correct form and extract the commitment, also saving it. We utilize the method \code{extractInterlinkHashes} and map it over all transactions in the block.
+
+\begin{lstlisting}[language=Javascript]
+const extractInterlinkHashesFromMerkleBlock = compose(
+  unnest,
+  map(extractInterlinkHashes),
+  prop("txs")
+);
+\end{lstlisting}
+
+\subsection{RealLink \& Verifying Interlink Commitments}
+We extend the \code{realLink} discussed earlier. Other than allowing us to get the interlink of any block it also allows us to check if a block is a valid velvet. It is able to do that as it gets notified for every new block seen during the synchronisation. When a new block appears, it gets informed about the block id and the interlinks included in the block. It keeps a running interlink in the same fashion the interlinker does so because the blocks events happen in-order it can check whether its running interlink matches the ones included in the block. In case there's a match the block is marked as a valid velvet and the running interlink is updated so that RealLink can be ready to process the next block.
+
+\begin{lstlisting}[language=Javascript]
+module.exports = class RealLink {
+  blockIdToInterlink: BufferMap;
+  runningInterlink: Interlink;
+  validBlocks: BufferSet;
+
+  constructor(genesisId: BlockId) {
+    this.blockIdToInterlink = new BufferMap();
+    this.runningInterlink = new Interlink(genesisId);
+    this.validBlocks = new BufferSet();
+  }
+
+  onBlock(newBlockId: BlockId, interlinks: Array<Buffer>) {
+    if (this.blockIdToInterlink.has(newBlockId)) {
+      return;
+    }
+
+    this.blockIdToInterlink.set(newBlockId, this.runningInterlink);
+    if (
+      interlinks.some(interlink =>
+        interlink.equals(this.runningInterlink.hash())
+      )
+    ) {
+      this.validBlocks.add(newBlockId);
+    }
+    this.runningInterlink = this.runningInterlink.update(newBlockId);
+  }
+
+  get(blockId: BlockId) {
+    return this.blockIdToInterlink.get(blockId);
+  }
+
+  hasValidInterlink(blockId: BlockId) {
+    return this.validBlocks.has(blockId);
+  }
+};
+\end{lstlisting}
+
+\subsection{Handling Merkle Blocks Redux}
+All information regarding the chain is sorted in a \code{VelvetChain} (TODO change name). A \code{VelvetChain} is the main entrypoint for block events. It is the single source of truth about the blockchain. When there is a new block, the whole block is associated with its id for later lookup, and its height is also recorded. It then gathers the block's interlink commitments and forwards them as a new event to \code{realLink}.
+
+\begin{lstlisting}[language=Javascript]
+  // ...
+  onBlock(blk: bcash.MerkleBlock, height: number) {
+    const id = blk.hash();
+    if (this.blockById.has(id)) {
+      return;
+    }
+
+    ++this.height;
+
+    if (!this.genesis) {
+      this.genesis = id;
+      this._realLink = new RealLink(this.genesis);
+      console.log("genesis was %O", blk);
+    }
+
+    this.blockById.set(id, blk);
+    this.heightById.set(id, this.height);
+    this.blockList.push(blk.hash());
+
+    const includedInterlinkHashes = extractInterlinkHashesFromMerkleBlock(blk);
+    this.realLink.onBlock(id, includedInterlinkHashes);
+
+    this.lastBlock = id;
+  }
+  // ...
+\end{lstlisting}
+
+\subsection{Following Up}
+\subsection{Finding the Velvet Upchain}
+\subsection{Crafting Suffix Proofs}
+\subsection{Following Down}
+\subsection{Going Back}
+\subsection{Crafting Infix Proofs}
+
 \subsection{Type Safety}
 To ensure code quality we opted to use Flow~\cite{flow}. Flow allowed us to have type safety while keeping all the good characteristics of JavaScript. Unfortunately this introduced a couple of complications.
 
