@@ -11,13 +11,19 @@ However, being more widespread and popular surfaced some problems the most impor
 
 New cryptocurrencies with interesting features pop up all the time. There's long been an interest in implementing sidechains~\cite{sidechains}, as a way to interoperate between two blockchains. One should be able to trustlessly transfer his Bitcoin to another chain and use it there (a \emph{one-way peg}), and transfer it back if he so desires (a \emph{two-way peg}). One-way pegs have been implemented by having a smart contract on a cryptocurrency like Ethereum which knows the full state of the other blockchain, much like a full node. However storage comes at a huge cost, which makes the hundreds of GBs of most blockchains infeasible to maintain.
 
-There's also the issue of user experience: even using a lite node at this point is too slow. Lite nodes use a protocol called \emph{SPV} which we'll look into detail shortly. SPV works by relaying only the block headers (which are of constant size) to the lite nodes and specifically any transactions they might suspect will interest them. Even so, the Dogecoin blockchain headers come up to 188MB. On an Android phone using the Dogecoin app, it takes about an hour before the app can be used, and this is assuming good network conditions. Trying to use such clients on a data plan could potentially make them completely unusable.
+\dznote{The above is well written.}
 
-\emph{NIPoPoWs}~\cite{nipopows} are a recent blockchain primitive allowing proofs on the blockchain of only logarithmic size instead of linear. These succinct proofs turn out to be key in solving problems like the above. One-way pegged contracts don't need to know about the whole blockchain, and lite nodes don't need to know all block headers to have the same security assurances.
+There's also the issue of user experience: even using a lite node at this point is too slow. Lite nodes use a protocol called \emph{SPV} which we'll look into in detail shortly. SPV works by relaying only the block headers (which are of constant size \dznote{isn't the size of the headers linear in the blockchain size? what are they constant in? transaction count?}) to the lite nodes and specifically any transactions they might suspect will interest them. Even so, the Dogecoin blockchain headers come up to 188MB. On an Android phone using the Dogecoin app, it takes about an hour before the app can be used, and this is assuming good network conditions. Trying to use such clients on a data plan could potentially make them completely unusable.
+
+\emph{NIPoPoWs}~\cite{nipopows} are a recent \dznote{recently invented?} blockchain primitive allowing proofs on the blockchain of only logarithmic size instead of linear. These succinct proofs turn out to be key in solving problems like the above. One-way pegged contracts don't need to know about the whole blockchain, and lite nodes don't need to know all block headers to have the same security assurances.
 
 \section{Related Work}
+\dznote{Reference Glou's work}
+
 \section{Objectives}
 \section{Structure}
+
+\dznote{You need to have a contributions section stating exactly what are your contributions and what you have build anew. Otherwise your thesis will be interpreted as a bibliographic review, which would be extremely unfair.}
 
 % why bitcoin cash TODO
 % why python TODO
