@@ -208,7 +208,34 @@ All information regarding the chain is sorted in a \code{VelvetChain} (TODO chan
 \end{lstlisting}
 
 \subsection{Following Up}
+We implement the \code{followUp} algorithm as described in Algorithm~\ref{alg.nipopow-velvet-follow}. \code{followUp} acts on a \code{VelvetChain} and requires a \code{newerBlockId} which is equivalent to $B$ and $\mu$.
+
+We also see use of the \code{levelledPrev} function. \code{levelledPrev}, given a block id and a level will attempt to cross the interlink pointer at the requested level. If the block is not a velvet block it will fail and just return the \code{previd}.
+
+A departure from the exact algorithm is that in our implementation we don't return a block set. Instead we return a block list which is sorted by height. By convention we also say that a block $A$ is \textit{left} of another block $B$ if $B.\mathsf{height} > A.\mathsf{height}$.
+
+\begin{lstlisting}[language=Javascript]
+  followUp(newerBlockId: BlockId, mu: Level): Array<BlockId> {
+    const genesis = nullthrows(this.genesis);
+    let id = newerBlockId;
+    let path = [id];
+    while (!id.equals(genesis)) {
+      id = this.levelledPrev(id, mu);
+      path.push(id);
+
+      if (level(id) === mu) {
+        break;
+      }
+    }
+
+    path.reverse();
+    return path;
+  }
+\end{lstlisting}
+
 \subsection{Finding the Velvet Upchain}
+Utilizing the \code{followUp} algorithm to implement Algorithm~\ref{alg.nipopow-velvet-upchain} is also pretty straightforward. However instead of only $\chain \upchain^\mu$ we would like to implement $\chain\upchain^\mu{B:}$ as this is needed by the prover. Programmatically we reference $B$ by its id as  \code{leftBlockId}. The original algorithm repeatedly calls to \code{followUp} until it has reached the genesis. 
+
 \subsection{Crafting Suffix Proofs}
 \subsection{Following Down}
 \subsection{Going Back}
