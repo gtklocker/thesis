@@ -1,7 +1,7 @@
 \chapter{NIPoPoW Velvet Fork Prover}
 Now that we've established a fork on the Bitcoin Cash chain, we show how our fork can be put to use by creating proofs. We introduce a kind of client called a \emph{prover} which can create all kinds of NIPoPoW proofs on demand.
 
-Let's assume we have an SPV node. We set the bloom filter to our velvet fork tag in order to get all blocks containing only the transactions of the fork. It's possible to then extract from each transaction the payload, which should be the interlink commitment. Since anyone can post such transactions on the blockchain, we have to make sure that the commitment is actually true before we can use it. In order to do that we maintain our own version of the interlink for each block (similar to how the interlinker does) which we know is correct called $\sf realLink$. Then for every block, we compare its commitments (there may be many) with the Merkle Tree root of our $\sf realLink$. If there is a valid commitment we say that the block has a valid interlink. We store the full interlink as $\sf realLink[id(block)]$.
+Let's assume we have an SPV node. We set the bloom filter to our velvet fork tag in order to get all blocks containing only the transactions of the fork. It's possible to then extract from each transaction the payload, which should be the interlink commitment. Since anyone can post such transactions on the blockchain, we have to make sure that the commitment is actually truthful before we can use it. In order to do that we maintain our own version of the interlink for each block (similar to how the interlinker does) which we know is correct called $\sf realLink$. Then for every block, we compare its commitments (there may be many) with the Merkle Tree root of our $\sf realLink$. If there is a valid commitment we say that the block has a valid interlink. We store the full interlink as $\sf realLink[id(block)]$.
 
 When we talked about NIPoPoWs we mentioned how it's essential that our proof forms a blockchain that can be traversed from start to end. In order to make our proof traversable, whenever we include a block we have to make sure it connects validly to the previous one either by (a) using the regular $\sf previd$ inside the block or (b) using a valid interlink. If we use the $\sf previd$ to link back to the previous block then all the information someone needs to verify the traversability is already there and we don't need to add anything extra. In the case we use the interlink however, we need to provide the Merkle Tree proofs for:
 
@@ -23,6 +23,7 @@ For suffix proofs we need a way to obtain the upchain of a chain, denoted as $\c
 $\sf followUp$ takes a block $b$ and a level $\mu$ as parameters. Starting from $b$ it traverses the chain until it reaches another block of level $\mu$ called $B$. In doing so, it is only allowed to use valid pointers. It will only follow a pointer from a block's interlink at level $\mu$ if there is a valid interlink in that block. Otherwise, the only option is to follow the previous block pointer ($\sf previd$). Once $B$ is reached, it is returned alongside the blocks that were traversed as a blockset called $\sf aux$.
 
 \input{algorithms/alg.nipopow-velvet-follow.tex}
+\dznote{I think you need a \emph{Source} here too, unless you modified this from KMZ?}
 
 %TODO figure with straight and dropdown cases
 
@@ -30,8 +31,13 @@ $\sf followUp$ takes a block $b$ and a level $\mu$ as parameters. Starting from 
 Now that we have a way to go back on a level, we can utilize it to construct the entire traversable level $\mu$ up to block $b$, starting from the end of the chain $\chain[-1]$: this is what ${\sf find \chain\upchain^\mu}(b)$ accomplishes. It works by repeatedly calling $\sf followUp$ on the oldest block it has and including the result in its final chain.
 
 \input{algorithms/alg.nipopow-velvet-upchain.tex}
+\dznote{Source?}
 
 \section{Velvet Infix Proofs}
+
+\dznote{You need some description on this and a comparison to the algorithm described in KMZ, since you have improved upon it.}
+
+\dznote{The three subsections above seem empty and need some more careful descriptions. Perhaps you can even move them to the background section with more detailed explanations.}
 
 \input{algorithms/alg.nipopow-velvet-infix-go-back.tex}
 
@@ -39,7 +45,7 @@ Now that we have a way to go back on a level, we can utilize it to construct the
 bcash, also used for the interlinker earlier, turns out the be the only option for an SPV node on Bitcoin Cash, making it the obvious choice for the prover.
 
 \subsection{Overview}
-Our prover works as follows. We expect a user to run the prover, passing as a parameter if they want a suffix or infix proof. If they desire an infix proof they have to provide the block of interest. Once they do that the prover runs and syncs with the Bitcoin Cash blockchain via SPV. It does some similar work to the work that an interlinker does: it knows what the correct interlink is for each block. It then checks the included commitments on each block and keeps a valid commitment for each block if found. A block containing a valid commitment is called a \emph{valid velvet}. Interlink pointers can only be used on valid velvets. Once the chain is synced and the prover knows the valid velvets along with the whole blockchain it creates a proof of the requested type and outputs it in JSON format.
+Our prover works as follows. We expect a user to run the prover, passing as a parameter if they want a suffix or infix proof. If they desire an infix proof they have to provide the block of interest. Once they do that the prover runs and syncs with the Bitcoin Cash blockchain via SPV. It does some similar work to the work that an interlinker does: it knows what the correct interlink is for each block. It then checks the included commitments on each block and keeps a valid commitment for each block if found. A block containing a valid commitment is called a \emph{valid velvet}\dznote{ or \emph{velvet block}?}. Interlink pointers can only be used on valid velvets. Once the chain is synced and the prover knows the valid velvets along with the whole blockchain it creates a proof of the requested type and outputs it in JSON format.
 
 \subsection{Interlink Implementation}
 Implementing an interlink structure is something we've already covered many times. Our implementation here is based on immutable value objects holding the interlink. Updating an interlink is done in the usual manner and creates a new interlink. What's different here is that we have a \code{proof} method: we use this method to generate a proof of inclusion of a specific pointer in the interlink commitment. We also need a way to be able to get a pointer from a specific level on the interlink and this is accomplished with the \code{at} method. Note that \code{at} can be asked for a level higher than the size of the interlink, in which case the velvet genesis is returned as it's assumed to be a block of level $\infty$.
@@ -85,6 +91,8 @@ class Interlink {
 }
 \end{lstlisting}
 
+\dznote{Suddenly flow. Perhaps that's worth mentioning that, even though you have a separate section later.}
+
 \subsection{Locating Velvet Transactions}
 Locating the velvet transactions is very easy considering that all our velvet transactions are SPV tagged. The only thing we have to do is add the SPV tag in our bloom filter. We do this right before connecting to the network.
 
@@ -100,7 +108,7 @@ module.exports = class ProverNode extends bcash.SPVNode {
 \end{lstlisting}
 
 \subsection{Extracting Interlink Commitments}
-we have to check that the transaction the valid form described earlier (\code{OP\_RETURN <tag> <commitment>}). In order to do that we look at the outputs of each transaction and only keep any outputs of our form. If some output matches then we extract the script's third element which is the commitment.
+We have to check that the transaction is of the form described earlier (\code{OP\_RETURN <tag> <commitment>}). In order to do that we look at the outputs of each transaction and only keep any outputs of our form. If some output matches then we extract the script's third element which is the commitment.
 
 \begin{lstlisting}[language=Javascript]
 const extractInterlinkHashes = compose(
@@ -122,10 +130,12 @@ const extractInterlinkHashes = compose(
 );
 \end{lstlisting}
 
-\subsection{Handling Merkle Blocks}
-When a block or transaction of a block matches our bloom filter, the block is relayed by full nodes as a \code{merkleblock} message. MerkleBlocks contain the header of the actual block as well as the transactions ids that matched. It also contains a proof of inclusion for all the transactions ids provided. One can check this proof of inclusion with accordance to the \code{merkleRoot} inside the block header. The transactions are included in subsequent \code{tx} messages. bcash hides this process from the user: on a new block event a MerkleBlock is provided and it contains a \code{txs} record, where the transactions that matched are included in full.
+\dznote{Worth mentioning the idiomatic use of functional JS here. Also a walkthrough on the code step-by-step wouldn't hurt (you can do this for all code listings)}
 
-In order to check if we have matched transactions in a block all we have to do is check if its \code{.txs} array is non-empty. If it is not then this block is definitely not a valid velvet. If it is not, then we have to ensure a correct form and extract the commitment, also saving it. We utilize the method \code{extractInterlinkHashes} and map it over all transactions in the block.
+\subsection{Handling Merkle Blocks}
+When a block or transaction of a block matches our bloom filter, the block is relayed by full nodes as a \code{merkleblock} message. MerkleBlocks \dznote{cite BTC developer guide?} contain the header of the actual block as well as the transactions ids that matched. It also contains a proof of inclusion for all the transactions ids \dznote{what is a transaction id?} provided. One can check this proof of inclusion with accordance to the \code{merkleRoot} inside the block header. The transactions are included in subsequent \code{tx} messages. bcash hides this process from the user: on a new block event a MerkleBlock is provided and it contains a \code{txs} record, where the transactions that matched are included in full.
+
+In order to check if we have matched transactions in a block all we have to do is check if its \code{.txs} array is non-empty. If it is not then this block is definitely not a valid velvet. If it is not \dznote{not not non-empty?}, then we have to ensure a correct form and extract the commitment, also saving it. We utilize the method \code{extractInterlinkHashes} and map it over all transactions in the block.
 
 \begin{lstlisting}[language=Javascript]
 const extractInterlinkHashesFromMerkleBlock = compose(
@@ -136,7 +146,9 @@ const extractInterlinkHashesFromMerkleBlock = compose(
 \end{lstlisting}
 
 \subsection{RealLink \& Verifying Interlink Commitments}
-We extend the \code{realLink} discussed earlier. Other than allowing us to get the interlink of any block it also allows us to check if a block is a valid velvet. It is able to do that as it gets notified for every new block seen during the synchronisation. When a new block appears, it gets informed about the block id and the interlinks included in the block. It keeps a running interlink in the same fashion the interlinker does so because the blocks events happen in-order it can check whether its running interlink matches the ones included in the block. In case there's a match the block is marked as a valid velvet and the running interlink is updated so that RealLink can be ready to process the next block.
+We extend the \code{realLink} discussed earlier. Other than allowing us to get the interlink of any block it also allows us to check if a block is a valid velvet. It is able to do that as it \dznote{who?} gets notified for every new block seen during the synchronisation. When a new block appears, it gets informed about the block id \dznote{what is a block id?} and the interlinks included in the block. It keeps a running interlink in the same fashion the interlinker does, so, because the blocks events happen in-order, it can check whether its running interlink matches the ones included in the block. In case there's a match, the block is marked as a valid velvet and the running interlink is updated so that RealLink can be ready to process the next block. \dznote{You could also give some code listing line number references with \texttt{\textbackslash ref} and \texttt{\textbackslash label}.}
+
+\dznote{Throughout this work you are skipping many needed commas that would make your text more readable.}
 
 \begin{lstlisting}[language=Javascript]
 module.exports = class RealLink {
@@ -246,7 +258,10 @@ To ensure code quality we opted to use Flow~\cite{flow}. Flow allowed us to have
 
 One is that our source files are not valid JavaScript anymore. In order to run our code we need to pass it through a pre-processor like Babel which emits clean JavaScript that then Node can run.
 
-Another is that all the external libraries we use, including bcash are not written including Flow types. Flow does provide a repository with type definitions for popular packages, however due to the niche category of our dependencies only a few were covered. This meant that the burden was on us to write type definitions for our dependencies. We had to manually write type definitions for bcash and buffer-map. Thankfully, there is previous work~\footnote{Available at \url{https://github.com/OrfeasLitos/TrustIsRisk.js/blob/247c8b182f5bb4bed11df0d3b9136a3e27848798/flow-typed/npm/bcoin_vx.x.x.js}} on type definitions for bcoin which we were able to utilize and extend since the APIs are really similar as bcash is a fork of bcoin.
+Another is that all the external libraries we use, including bcash are not written including Flow types. Flow does provide a repository with type definitions for popular packages, however due to the niche category of our dependencies only a few were covered. This meant that the burden was on us to write type definitions for our dependencies. We had to manually write type definitions for bcash and buffer-map. Thankfully, there is previous work\footnote{Available at \url{https://github.com/OrfeasLitos/TrustIsRisk.js/blob/247c8b182f5bb4bed11df0d3b9136a3e27848798/flow-typed/npm/bcoin_vx.x.x.js}} on type definitions for bcoin which we were able to utilize and extend since the APIs are really similar as bcash is a fork of bcoin.
 
 \subsection{Testing}
-Due to the real-time and asynchronous nature of the prover it's important that our implementation is resilient and bug-free. In order to assert that the code has been thoroughly unit tested, boasting a code coverage of >90\%. The tests are written and run with Jest~\cite{jest}. There are also integration tests using real-world data.
+Due to the real-time and asynchronous nature of the prover it's important that our implementation is resilient and bug-free. In order to assert that the code has been thoroughly unit tested, boasting a code coverage of $>90\%$. The tests are written and run with Jest~\cite{jest}. There are also integration tests using real-world data.
+
+\dznote{Show some code listings of tests.}
+\dznote{Show some coverage graphs.}

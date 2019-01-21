@@ -4,9 +4,9 @@
 % cite backbone model (proven secure in) TODO
 
 \subsection{The Prover-Verifier Model}
-Before we talk about the specifics of proofs we first have to define our setting. In our setting we have two kinds of actors, \emph{provers} and \emph{verifiers}.
+Before we talk about the specifics of proofs \dznote{What proofs?} we first have to define our setting. In our setting we have two kinds of actors, \emph{provers} and \emph{verifiers}.
 
-A verifier is a party who wishes to know something about our blockchain. It's assumed it doesn't have network access (i.e. it can't be a full node). A verifier can be thought of as a Turing Machine which takes one or more proofs as input, and then determines whether a predicate is true or not.
+A verifier is a party who wishes to know something about our blockchain. It's \dznote{Avoid using \emph{it's} for \emph{it is}, \emph{doesn't} for \emph{does not}, and \emph{can't} for \emph{can not} here and throughout the text.} assumed it doesn't have network access (i.e. it can't be a full node). A verifier can be thought of as a Turing Machine which takes one or more proofs as input, and then determines whether a predicate \dznote{What predicate? You seem to be implying that these are chain predicates, but the reader does not know this.} is true or not.
 
 Provers are parties with access to our blockchain's network, who wish to communicate to the verifier and convince them about a predicate.
 
@@ -36,7 +36,7 @@ NIPoPoWs also assume each block contains an interlink data structure, which we'l
 In the next section we'll look at how we sidestep all those issues.
 
 \subsection{Levels}
-At the heart of the primitive lies the separation of blocks into levels. The level of a block is defined as $\textit{level}(B) = \left \lfloor \log(T) - \log(\sf{id}(B)) \right \rfloor$, where $T$ is the constant difficulty of the blockchain. The genesis block is an exception to this rule as $\textit{level}(Gen) = \infty$. We call a block of level $\mu$ a $\mu$-superblock.
+At the heart of the primitive lies the separation of blocks into levels. The level of a block is defined as $\textit{level}(B) = \left \lfloor \log(T) - \log(\sf{id}(B)) \right \rfloor$, where $T$ is the constant difficulty of the blockchain. The genesis block is an exception to this rule as \dznote{we define} $\textit{level}(Gen) = \infty$. We call a block of level $\mu$ a $\mu$-superblock.
 
 Intuitively, the level of a block is the number of leading zeros of the binary representation of the block id when left padded to the length of $T$. An example of this can be seen on Table~\ref{table:level-counting}.
 
@@ -53,7 +53,7 @@ Intuitively, the level of a block is the number of leading zeros of the binary r
   \label{table:level-counting}
 \end{table}
 
-Figure~\ref{fig:hierarchy} shows an example the implied blockchain created from the superblocks.
+Figure~\ref{fig:hierarchy} shows an example \dznote{of} the implied blockchain created from the superblocks.
 
 \begin{figure}
   \centering
@@ -66,16 +66,16 @@ Figure~\ref{fig:hierarchy} shows an example the implied blockchain created from 
 The NIPoPoWs paper introduces some notation for talking about blockchains with levels which we'll be using extensively. The notation is widely influenced by Python. Specifically:
 
 \begin{itemize}
-  \item $\chain$ denotes a blockchain, with $\chain[0]$ being the genesis block, $\chain[k]$ being the $k$-th first block and $\chain[-k]$ being the $k$-th last block.
+  \item $\chain$ denotes a blockchain, with $\chain[0]$ being the genesis block, $\chain[k]$ being the $k$-th block from the beginning and $\chain[-k]$ being the $k$-th last block.
   \item $\chain[k:]$ denotes the sub-blockchain starting from the $k$-th block, $\chain[-k:]$ denotes the sub-blockchain starting from the $k$-th last block.
   \item $\chain[:k]$ denotes the sub-blockchain ending before the $k$-th block, $\chain[:-k]$ denotes the sub-blockchain ending before the $k$-th last block.
   \item $\chain[i:j]$ denotes the sub-blockchain starting from the $i$-th block and ending at the $j$-th block. $i$ and $j$ can also be negative numbers similar to above.
-  \item $\chain\{B:\}$ denotes the sub-blockchain starting from the block with block id $B$.
-  \item $\chain\upchain^\mu$ denotes the sub-blockchain of $\chain$ where all blocks are of level $\mu$ or higher.
+  \item $\chain\{B:\}$ denotes the sub-blockchain starting from the block with block id $B$. \dznote{I did not intend to use $B$ as a blockid here; rather, it is literally a \emph{block}, the mathematical object.}
+  \item $\chain\upchain^\mu$ denotes the sub-blockchain of $\chain$ where all blocks are of level $\mu$ or higher. \dznote{Here you should state that intermediate blocks could have been skipped.}
 \end{itemize}
 
 \subsection{Interlink}
-Instead of keeping only the hash of the previous block inside the block header, for every superblock level we keep a pointer to the most recent superblock of that level. The structure containing these pointers is called the interlink. Bitcoin does not support such a structure in the block header but we will study how to sidestep this issue by velvet forking in a few sections.
+Instead of keeping only the hash of the previous block inside the block header, for every superblock level we keep a pointer to the most recent superblock of that level. The structure containing these pointers is called the \emph{interlink}. Bitcoin does not support such a structure in the block header but we will study how to sidestep this issue by velvet forking in a few sections.
 
 \begin{table}
   \centering
@@ -96,7 +96,7 @@ Instead of keeping only the hash of the previous block inside the block header, 
 
 It's important to note that the interlink can be encoded as a series of block ids, starting from $0$ up to $\infty$. It can also be compressed by using this series as the leafs of a Merkle tree and taking the Merkle tree root.
 
-Suppose we have a block $B'$ with an interlink stored as $B'.{\sf interlink}$. In order to produce the interlink for a block after $B'$ we make sure to change all pointers from level $0$ up to $level(B')$ to point to $B'$, as $B'$ will be the most recent block at these levels (remember that a block of level $\mu$ is also of level $\mu-1$). We call this procedure {\sf updateInterlink}, which can be seen in detail on Algorithm~\ref{alg.nipopow-interlink}.
+Suppose we have a block $B'$ with an interlink stored as $B'.{\sf interlink}$. In order to produce the interlink for the block after $B'$ we make sure to change all pointers from level $0$ up to $level(B')$ to point to $B'$, as $B'$ will be the most recent block at these levels (remember that a block of level $\mu$ is also of level $\mu-1$ \dznote{this is not clear from your definition above}). We call this procedure {\sf updateInterlink}, which can be seen in detail on Algorithm~\ref{alg.nipopow-interlink}.
 
 \input{algorithms/alg.nipopow-interlink.tex}
 
@@ -107,7 +107,7 @@ A suffix proof of a chain $\chain$ is constituted of two chains, $\pi$ and $\chi
 
 The process for constructing $\pi$ is a little more convoluted. First we have to find the first level $\mu$ where $|\chain\upchain^\mu| \ge m$. We call this level $max\mu$. For this level we take all its blocks except for the last $m$: $\pi_{max\mu} = \chain\upchain^\mu[:-m]$. Then for every level $\mu$ from $max\mu - 1$ to $0$, we take blocks $\pi_\mu = \chain\upchain^\mu [:-m]\{\chain\upchain^{\mu+1}[-m]:\}$.
 
-$\pi$ is then evaluated as the concatenation of all those chains starting from the oldest block:
+$\pi$ is then evaluated as the concatenation \dznote{Given the fact that in the expression below there are block duplicates, I do not think that it produces a chain.} of all those chains starting from the oldest block:
 
 $$ \pi = \pi_{max\mu} || \pi_{max\mu-1} || \ldots || \pi_0 $$
 
@@ -118,10 +118,12 @@ $$ \pi = \pi_{max\mu} || \pi_{max\mu-1} || \ldots || \pi_0 $$
   \label{fig:suffix-proof}
 \end{figure}
 
-It's important to notice that the chain provided to the verifier is an actual chain: one can start at the end and traverse it until the genesis block by utilizing the interlink of each block, similar to how they would do that on a conventional blockchain by using each block's $\sf previd$.
+It's important to notice that the chain provided to the verifier is an actual chain: one can start at the end and traverse it until the genesis block by utilizing the interlink of each block, similar to the way they would process a conventional blockchain by using each block's $\sf previd$.
+
+\dznote{Include the suffix prover algorithm here, or your rendition of it.}
 
 \subsection{Infix Proofs}
-For the verifier to be able to determine a predicate on one or more blocks ($\chain' \subseteq \chain$) of our chain, we have to make sure we include them in a proof. A suffix proof is not guaranteed to include all blocks of interest in $\chain'$. In order to include these we have to make sure they are linked to the proof, e.g. that the proof chain is a traversable. To this end, let's assume some arbitrary block $B \in \chain'$. Let's also assume an existing suffix proof $\pi\chi$. We find blocks $E'$ and $E$ on the suffix proof, such that:
+For the verifier to be able to determine a predicate on one or more blocks ($\chain' \subseteq \chain$) of our chain, we have to make sure we include them in a proof. A suffix proof is not guaranteed to include all blocks of interest in $\chain'$. In order to include these we have to make sure they are linked to the proof, e.g. that the proof chain is a traversable. To this end, let $B \in \chain'$ be an arbitrary block. Let $\pi\chi$ be an existing suffix proof \dznote{You are not \emph{assuming} anything, you are \emph{letting} your variables, so do not use the word \emph{assume}}. We find blocks $E'$ and $E$ on the suffix proof, such that:
 
 \begin{itemize}
   \item $E$ is the next block after $E'$ on the proof
@@ -146,11 +148,15 @@ Augmenting the original suffix proof with the new blocks provided by $\sf follow
 
 \subsection{Proof Verification}
 \subsection{Velvet Forks}
+\dznote{Velvet forks are a central point of your thesis. You must expand and discuss this a lot. See Buterin's blog post on soft, hard, and bilateral hard forks. I would expect to see something similar in your introduction. You definitely have to go into details about what a soft fork is, what hard fork is, and what a velvet fork is, as well as include a few venn diagrams. See also the slides of my 6-hour lecture on NIPoPoWs where similar diagrams are included, as well as Vitalik's diagrams.}
+
 Velvet forks~\cite{nipopows,velvet} describe a formalization of adding arbitrary data inside blocks in order to allow potential applications without sacrificing the backwards compatibility of the blockchain.
 
-Miners who are willing to contribute to the fork can add data of interest in the form of coinbase transaction data. 
+Miners who are willing to contribute to the fork can add data of interest in the form of coinbase transaction data.
 
-Backwards compatibility is achieved by not changing the consensus rules, meaning that set of acceptable blocks does not change. So any block that was acceptable remains acceptable even if it does not contain any data concerning the fork, or if it contains invalid data.
+Backwards compatibility is achieved by not changing the consensus rules, meaning that set of acceptable blocks does not change. So any block that was acceptable remains acceptable even if it does not contain any data concerning the fork, or if it contains invalid data. \dznote{Here it is best to talk about some sort of \emph{validity language}, although you can avoid the formalities of the PoS sidechains paper.}
+
+\dznote{You should speak about how upgraded miners accept blocks that have incorrect velvet data, and how this is not a threat to security.}
 
 \subsection{User-Activated Velvet Forks}
 In case miners aren't interested in including such data, users can also create such a fork by making a kind of transaction called velvet transaction. In a velvet transaction a user includes any data of interest in unspendable transaction outputs (like OP\_RETURN).
@@ -159,4 +165,4 @@ For the consumer of such data, the only difference is that they have to look ins
 
 Such forks come at the cost of making such transactions, because the user who makes the fork needs to pay transaction fees every time they wish to add data to the blockchain.
 
-For our application, we implemented a User-Activated Velvet Fork in order to add the interlink data structure to Bitcoin Cash blocks. Since Bitcoin Cash has very low fees, a projection of running such a fork comes at around 10€/month.
+For our application, we implemented a User-Activated Velvet Fork in order to add the interlink data structure to Bitcoin Cash blocks. Since Bitcoin Cash has very low fees; a projection of running such a fork comes at around 10€/month.

@@ -1,36 +1,42 @@
 \chapter{Velvet Fork Implementation}
-Now that we have seen how NIPoPoWs work and what options we have in our disposal to deploy them to existing blockchains, we will investigate how we implemented NIPoPoWs on Bitcoin Cash.
+\dznote{I think you should state, ideally in a separate section, an overview (in the form of a list) of what you will be presenting that is your own creation, stating the purpose of each part of the architecture. You should provide an architectural diagram. You should also clearly state some metrics about your code (in terms of lines of code) and state that you will only be presenting some of the more interesting parts of the code, in a simplified format for exposition, and that the interested reader can refer to your repositories. Finally you should state what open source license you have used and include your GitHub URLs.}
+
+Now that we have seen how NIPoPoWs work and what options we have at our disposal to deploy them to existing blockchains, we will investigate how we implemented NIPoPoWs on Bitcoin Cash.
 
 \pdffigure{blocks-with-their-interlinks}{Example of blocks with their corresponding interlinks for $T = 100000$. Note that for the upcoming block marked with \textbf{?} we can produce its interlink without knowing its hash.}
 
-Since Bitcoin Cash blocks don't contain the interlink we have to utilize a velvet fork. We could choose a regular velvet fork. A regular velvet fork would require for a miner minority to exist and run code which would add the interlink inside the coinbase transaction. Finding and contacting miners would require a lot of non-technical work and persuasion. It would also mean that probably only a minority of the blocks would be validly interlinked. Seeing that persuading miners would require a lot of work and would not bring an ideal outcome we decided to implement a User-Activated Velvet Fork instead.
+Since Bitcoin Cash blocks don't contain the interlink, we have to utilize a velvet fork. We could choose a regular velvet fork. A regular velvet fork would require for a miner minority to exist and run code which would add the interlink inside the coinbase transaction. Finding and contacting miners would require a lot of non-technical work and persuasion. It would also mean that probably only a minority of the blocks would be validly interlinked. Seeing that persuading miners would require a lot of work and would not bring an ideal outcome we decided to implement a User-Activated Velvet Fork instead.
 
 To this end, we need to make sure that a transaction is included in every single block containing its implied interlink. We do this by implementing a service which for every new block, calculates the expected interlink of the upcoming block and sends a transaction including this interlink in hopes that it will be included in the upcoming block. If this is indeed achieved then that block will indeed contain its valid interlink. We henceforth call the service which does this an \emph{interlinker}. An example of blocks and their corresponding interlinks can be seen on Figure~\ref{fig:blocks-with-their-interlinks}.
 
 \section{Picking a Velvet Genesis}
-Naturally one would expect the interlink to start from the real blockchain genesis as it would enable proofs for any already existing block of that blockchain. However, for older blocks there can be no improvement. There is no other option than providing the full chain as a proof since no older blocks contain any interlinks. Thus in order to avoid accounting in our interlink for blocks in the past that can only be connected to the real genesis by supplying the full chain we choose a new genesis called the \emph{velvet genesis}. For our purposes in Bitcoin Cash testnet we chose the block with height 1257603 as our velvet genesis.
+Naturally one would expect the interlink to start from the real blockchain genesis as it would enable proofs for any already existing block of that blockchain. However, for older blocks there can be no improvement \dznote{why?}. There is no other option than providing the full chain as a proof since no older blocks contain any interlinks. Thus in order to avoid accounting in our interlink for blocks in the past that can only be connected to the real genesis by supplying the full chain we choose a new genesis called the \emph{velvet genesis}. For our purposes in Bitcoin Cash testnet we chose the block with height 1257603 as our velvet genesis.
+
+\dznote{Expand a bit on the above section.}
 
 \section{Interlink encoding}
-We now have to consider our options for representing the interlink. 
-Bitcoin Cash uses SHA-256 for the block hashes, meaning that each block id consists of 32 bytes. 
-A naive encoding would be one where each 32-byte block hash from level $0$ up to $\infty$ is concatenated, with the $\infty$ pointer always pointing to the genesis block..
+We now have to consider our options for representing the interlink.
+Bitcoin Cash uses SHA-256 for the block hashes \dznote{you can state this in the introduction, with an appropriate SHA-256 citation}, meaning that each block id consists of 32 bytes.
+A naive encoding would be one where each 32-byte block hash from level $0$ up to $\infty$ is concatenated, with the $\infty$ pointer always pointing to the genesis block.
 For 35 levels, which according to Figure~\ref{fig:bitcoin-cash-testnet-levels-after-velvet-genesis} is a reasonable figure, this encoding would take approximately 1.12KB.
 Considering that \code{OP\_RETURN} scripts are limited in size to 223 bytes, this would only allow us to include up to 6 pointers at best.
 
-\pdffigure{bitcoin-cash-testnet-levels-after-velvet-genesis}{Number of levels assuming our selected velvet genesis.}
+\pdffigure{bitcoin-cash-testnet-levels-after-velvet-genesis}{Number of levels assuming our selected velvet genesis. \dznote{Redo your figure using LaTeX fonts. See my figure in the Egalitarianism paper for the respective matplotlib code. Also consider usingn log-scale in the horizontal axis.}}
 
 Putting this limitation aside, the fee of the transaction is proportional to the transaction size, and since we're going to be sending a transaction for every block (which is mined approximately every 10 minutes), it is important that the fee is minimized.
 
 Thus in order to save space, we only include a commitment to the interlink in our transactions. Specifically, we take the Merkle Tree root of the Merkle Tree with leafs the block hashes starting from level $0$ up to $\infty$. This way, our interlink encoding is constant size and we can easily provide compact proofs for any of the levels.
 
-\section{Discoverability}
-We've talked about how just including the interlink somewhere on a block is what really matters but it is crucial that we make this information easy to discover. We achieve this in two ways. First, we include the interlink commitment inside a special \code{OP\_RETURN} output. Such outputs are already being used for storing arbitrary data in blocks~\cite{arbitrary-data} therefore we adopt this method for storing our interlinks. Second, we aim to make this interlink discoverable for lite nodes, so we don't require our users to download a whole block in order to look into it. We achieve this by utilizing a method called \emph{SPV tagged outputs}~\cite{spv-tagged}.
+\dznote{Expand on the above section. This is a central piece of your thesis. Show an example of an interlink merkle tree and a proof. Also discuss your proposed improvement as a set instead of a list. This is your invention and you should state it as your contribution. You should also clearly state that you are the first to provide a practical implementation of interlinking also in the \emph{Our contributions} section of your introduction.}
 
-SPV tagged outputs are outputs that are tagged so that they can be discovered by SPV nodes who add the ``tag'' to the filter. Specifically, we form outputs of the form \code{OP\_RETURN baba deadbeef}, where \code{baba} is our tag and \code{deadbeef} is our payload (in our case, the interlink commitment). A bloom filter for \code{baba} will then match this output and subsequently the transaction that contains it and this is how our specialized SPV nodes can discover our outputs. The full nodes forwarding the velvet transactions to the SPV nodes don't have any knowledge of what a velvet fork even is, let alone that they are forwarding its transactions.
+\section{Discoverability}
+We've talked about how just including the interlink somewhere on a block is what really matters \dznote{have you?} but it is crucial that we make this information easy to discover. We achieve this in two ways. First, we include the interlink commitment inside a special \code{OP\_RETURN} output. Such outputs are already being used for storing arbitrary data in blocks~\cite{arbitrary-data} therefore we adopt this method for storing our interlinks. Second, we aim to make this interlink discoverable for lite nodes, so we don't require our users to download a whole block in order to look into it \dznote{This is an important contribution and you should not downplay it. Expand a bit on this section. Show the transaction graph of the example transaction. Also make sure the reader understands that the PROVER is a lite node and not a full node, which is an important achievement! You should also state that you are not only the first work to deploy a velvet interlinker, but also the first to do it with a lite prover; you should also state that this was not anticipated in the original papers and it is your own invention, even though it is a combination of prior ideas}. We achieve this by utilizing a method called \emph{SPV tagged outputs}~\cite{spv-tagged}.
+
+SPV tagged outputs are outputs that are tagged so that they can be discovered by SPV nodes who add the ``tag'' to the filter. Specifically, we form outputs of the form \code{OP\_RETURN baba deadbeef}, where \code{baba} is our tag and \code{deadbeef} is our payload (in our case, the interlink commitment). A bloom filter \dznote{what is a bloom filter?} for \code{baba} will then match this output \dznote{do SPV nodes use bloom filters for matching?} and subsequently the transaction that contains it and this is how our specialized SPV nodes can discover our outputs. The full nodes forwarding the velvet transactions to the SPV nodes don't have any knowledge of what a velvet fork even is, let alone that they are forwarding its transactions.
 
 The tag we use for our transactions is \code{696e7465726c696e6b}, which is the ASCII encoding of \code{interlink}. An example of such a real-world velvet transaction created by our deployed interlinker on the Bitcoin Cash testnet can be seen on Figure~\ref{fig:actual-velvet-tx}.
 
-\pngfigure{actual-velvet-tx}{An actual velvet fork transaction.}
+\pngfigure{actual-velvet-tx}{An actual velvet fork transaction. \dznote{Some of the text is unreadable. Ideally you want the smallest text in the figure to be equal in size to your main body text. You already have paddings in this figure that you can remove to make it slightly larger. See if you can also repeat the outputs in the main text and explain them in detail.}}
 
 \section{Fault Tolerance}
 It is important to note that the interlinker works on a best-effort basis. Due to the nature of Velvet Forks though, no failure is fatal. The types of failures are as follows:
@@ -43,12 +49,12 @@ It is important to note that the interlinker works on a best-effort basis. Due t
   \item \textbf{Arbitrary failure}: The interlinker pushes a transaction before a new block is seen or pushes a duplicate for a specific upcoming block twice.
 \end{itemize}
 
-We will study how these failures can be mitigated in the next section.
+We will study how these failures can be mitigated in the next section. \dznote{You should state that you are the first to do an interlinker failure analysis using a traditional systems approach.}
 
 \section{Viability}
-Making the operation of the interlinker affordable is key in order to allow many parties to run it. We will estimate the cost of operation now.
+Making the operation of the interlinker affordable is key in order to allow many parties to run it. We will estimate the cost of operation now. \dznote{You should say that you are the first to give such estimated (or if Glou did, compare against him)}
 
-Our transaction size ($\sf txBytes$) is constant at exactly 244 bytes. The median Bitcoin Cash fee per byte ($\sf feePerByte$) at the time of writing (November 2018) is 1 satoshi. Multiplied by our transaction size this gives us a transaction fee ($\sf txFee = txBytes * feePerByte$) of 244 satoshis.  Our complete estimations based on the current price of Bitcoin Cash can be seen on Table~\ref{tbl:cost-analysis}.
+Our transaction size ($\sf txBytes$) is constant at exactly 244 bytes. The median Bitcoin Cash fee per byte ($\sf feePerByte$) at the time of writing (November 2018) is 1 satoshi. Multiplied by our transaction size this gives us a transaction fee ($\sf txFee = txBytes * feePerByte$) of 244 satoshis.  Our complete estimations based on the current price of Bitcoin Cash can be seen on Table~\ref{tbl:cost-analysis}. \dznote{State here that you aim to have one transaction per block. Show the trade-off as you decreased the velvet $g$ value in a graph. For example, what happens if you have one velvet block per ten regular blocks?}
 
 \begin{table}
   \centering
@@ -65,10 +71,10 @@ Our transaction size ($\sf txBytes$) is constant at exactly 244 bytes. The media
   \label{tbl:cost-analysis}
 \end{table}
 
-We provide two implementations of an interlinker which both run in production. We'll now look at the pros and cons of each.
+We provide \dznote{You are downplaying your work. You should state it much more proudly. For example: In the scope of this work, we have developed two separate production implementations of an interlinker. These are also the first interlinkers to have ever been developed and deploying on any blockchain network. We have been running both implementations as a service to the community with an uptime of such and such...} two implementations of an interlinker which both run in production. We'll now look at the pros and cons of each.
 
 \section{Python implementation with Bitcoin-ABC}
-Our first implementation is built on top of Bitcoin-ABC. Bitcoin-ABC is the reference implementation for Bitcoin Cash in C++. It is a fork of the original Bitcoin codebase (now Bitcoin Core), and it was the first ever implementation to support Bitcoin Cash. It has a very active community of developers and users. Due to its heritage from Bitcoin Core the code is very well written and tested, and any new feature for the Bitcoin Cash chain appears on Bitcoin-ABC first.
+Our first implementation is built on top of Bitcoin-ABC \dznote{cite?}. Bitcoin-ABC is the reference implementation for Bitcoin Cash in C++. It is a fork of the original Bitcoin codebase (now Bitcoin Core), and it was the first ever implementation to support Bitcoin Cash. It has a very active community of developers and users. Due to its heritage from Bitcoin Core the code is very well written and tested, and any new feature for the Bitcoin Cash chain appears on Bitcoin-ABC first.
 
 We run Bitcoin-ABC as a full node and interface with it using JSON-RPC. The interlinker is a Python module which knows (a) the location and credentials to connect with the full node and (b) the velvet fork genesis block id. We use the python-bitcoinrpc library~\cite{python-bitcoinrpc} for the JSON-RPC communication.
 
@@ -90,6 +96,8 @@ while True:
     tip_id = possibly_new_tip_id
 \end{lstlisting}
 
+\dznote{The above section is well written.}
+
 \subsection{Reaction to a New Block}
 
 When there is a new block, the interlinker computes the correct interlink for it, by updating the interlink with all the intermediate blocks from the velvet fork genesis up to and including the new block. It then computes the Merkle Tree root and includes it in an SPV tagged output. Subsequently it wraps the output inside a change transaction and sends it to the network.
@@ -105,9 +113,11 @@ We also see the use of \code{shelve} on the code below. \code{shelve} is a Pytho
     logger.info('velvet tx "%s"', send_velvet_tx(new_interlink.hash()))
 \end{lstlisting}
 
+\dznote{The above section is well written.}
+
 \subsection{Calculating the Interlink}
 
-The naive way to calculate the interlink would be starting from the velvet genesis block to keep a running interlink and sequentially update it. Considering that between the tip and the velvet genesis there could be millions of blocks, and for each block we need to issue a JSON-RPC call to get its block hash by using \code{getblockhash}. We experimentally found this method to take upwards of 15 seconds for approximately 15000 blocks, averaging at 1000 blocks/second.
+The naive way to calculate the interlink would be starting from the velvet genesis block to keep a running interlink and sequentially update it \dznote{what?}. Considering that between the tip and the velvet genesis there could be millions of blocks, and for each block we need to issue a JSON-RPC call to get its block hash by using \code{getblockhash} \dznote{this sentence no verb}. We experimentally found this method to take upwards of 15 seconds for approximately 15000 blocks, averaging at 1000 blocks/second.
 
 To make this process faster we cache all interlinks we compute. This caching happens inside the \code{store} shown in the code below. \code{store} is a dictionary which maps block ids to their corresponding interlinks. In order to compute an interlink for a given tip we traverse the blockchain from the tip until we end up at a block for which the interlink is already available. We always ensure the cache contains at least the interlink for the velvet genesis which is empty and only contains the genesis pointer (of level $\infty$). We keep the block ids between the tip and the block with the cached interlink and then proceed to update the interlink that was found with each intermediate block id, in order. In doing so we also save each interlink we compute to its corresponding block id in the store, so that it will be available if we ever need it again. After the interlink has been updated with all blocks we are done and we can return it as the final result.
 
@@ -155,6 +165,7 @@ The \code{update} method is a straightforward adaptation of Algorithm~\ref{alg.n
                 blocks.append(block_id)
         return Interlink(genesis=self.genesis, blocks=blocks)
 \end{lstlisting}
+\dznote{An example of the interlink construtor over multiple invocations would be in place.}
 
 The commitment is generated by the \code{hash} method defined on \code{Interlink}, which after getting the representation of the interlink as an array, including the velvet genesis as the last element, then calculates the Merkle Tree root (abbreviated as \code{mtr}) of a tree with the elements of this array as leaves.
 
@@ -166,11 +177,13 @@ The commitment is generated by the \code{hash} method defined on \code{Interlink
         return mtr(self.as_array())
 \end{lstlisting}
 
+\dznote{The above section is good.}
+
 \subsection{Bitcoin-style Merkle Trees}
 
 For implementing the \code{mtr} function seen above we searched for existing Python libraries offering this functionality. While some libraries came up, none of them implemented the Bitcoin-style Merkle Trees we were after. This functionality is definitely implemented in some of more general Python Bitcoin libraries we make use of however it isn't exposed. This led us to write our own implementation of Bitcoin-style Merkle Trees.
 
-We only implement the root calculation as described in Section~\ref{sec:merkle-trees} in \code{mtr}. \code{mtr} accepts an array of leafs. The function works by taking a level of the tree (initially the leafs) and repeatedly generating the upper level. This process continues until the level reached only has one element, where it's declared the root and is returned as the result. The function for generating the upper level, \code{next\_level} uses many Python idioms and this requires an explanation. It starts by taking a level and then pairing its element with its adjacent. This happens with \code{zip\_longest} which takes 2 lists and "zips" them together like so: \code{zip\_longest([1, 2, 3], [4, 5, 6]) = [(1, 4), (2, 5), (3, 6)]}. For the uninitiated we provide a Haskell implementation below.
+We only implement the root calculation as described in Section~\ref{sec:merkle-trees} in \code{mtr}. \code{mtr} accepts an array of leafs. The function works by taking a level of the tree (initially the leafs) and repeatedly generating the upper level. This process continues until the level reached only has one element, where it's declared the root and is returned as the result. The function for generating the upper level, \code{next\_level} uses many Python idioms and this requires an explanation. It starts by taking a level and then pairing its element with its adjacent. This happens with \code{zip\_longest} which takes 2 lists and ``zips'' them together like so: \code{zip\_longest([1, 2, 3], [4, 5, 6]) = [(1, 4), (2, 5), (3, 6)]}. For the uninitiated we provide a Haskell implementation below.
 
 \begin{lstlisting}[language=Haskell]
 zip_longest :: [a] -> [a] -> a -> [a]
@@ -199,6 +212,7 @@ After getting the list of pairs we go through it hashing the pairs together.
         h2.update(h1.digest())
         return h2.digest()
 \end{lstlisting}
+\dznote{This seems to be hashing the value of \texttt{l} with the hash of \texttt{r}, i.e. $H(l || H(r))$. Is this what you wanted?}
 
 This setup makes our Merkle Tree root calculation very straightforward.
 
@@ -210,6 +224,8 @@ def mtr(leafs):
         level = next_level(level)
     return level[0]
 \end{lstlisting}
+
+\dznote{The above is well written.}
 
 \subsection{Velvet Transactions}
 
@@ -223,8 +239,9 @@ def create_raw_velvet_tx(payload_buf):
     tx = CMutableTransaction([], digest_outs)
     return tx.serialize().hex()
 \end{lstlisting}
+\dznote{You need to fix your single quotes in your code listings.}
 
-The next stage is to actually send the transaction. Of course a transaction with only one output is incomplete and invalid. In order to fill it in with the appropriate inputs and change output we turn to our Bitcoin-ABC node. We use the \code{fundrawtransaction} JSON-RPC method in order to do all the above. We then only have to sign and send the transaction out in the network.
+The next stage is to actually send the transaction. Of course a transaction with only one output is incomplete and invalid \dznote{no it is not}. In order to fill it in with the appropriate inputs and change output we turn to our Bitcoin-ABC node. We use the \code{fundrawtransaction} JSON-RPC method in order to do all the above. We then only have to sign and send the transaction out in the network.
 
 \begin{lstlisting}[language=Python]
 def send_velvet_tx(payload_buf):
@@ -297,13 +314,14 @@ def test_no_leafs():
         mtr([])
 \end{lstlisting}
 
+\dznote{Include some testing coverage metrics here. Also talk about your continuous integration.}
+
 \subsection{Distribution}
 
-Our software is production-grade and we release it under the open source MIT license.
-\footnote{The code is available at \url{https://github.com/decrypto-org/bch-interlinker}}.
+Our software is production-grade and we release it under the open source MIT license\footnote{The code is available at \url{https://github.com/decrypto-org/bch-interlinker}}.
 
 \section{JavaScript implementation with bcash}
-The second implementation is build on top of the bcash JavaScript library. bcash implements a full node and wallet functionality exclusively in JavaScript without being based on the Bitcoin C++ codebase as did most previous solutions. A major advantage of bcash is that it implements an SPV node too, which is very useful since the interlinker only needs the block ids of the chain but doesn't need to know about the block contents, so requiring a full node to run it would be a waste of space and bandwidth.
+The second implementation is build on top of the bcash \dznote{cite} JavaScript library. bcash implements a full node and wallet functionality exclusively in JavaScript without being based on the Bitcoin C++ codebase as did most previous solutions. A major advantage of bcash is that it implements an SPV node too, which is very useful since the interlinker only needs the block ids of the chain but doesn't need to know about the block contents, so requiring a full node to run it would be a waste of space and bandwidth.
 
 \subsection{Architecture}
 The bcash architecture is a departure from the JSON-RPC paradigm described above and requires some explanation. One major difference is that this implementation doesn't require an external node: the interlinker is a standalone program which due to the bcash library is also an SPV node. bcash offers Node classes which are standalone nodes. Apart from SPV it also offers a \code{FullNode} class.
@@ -352,6 +370,8 @@ It is important to note that this is only a heuristic but it has proven to work 
   }
 \end{lstlisting}
 
+\dznote{Why do you need that \texttt{.then()}?}
+
 \subsection{Reaction to a New Block}
 
 Whenever a new block occurs we calculate the interlink and send a transaction with its commitment just as before. This code looks almost identical in form to the previous implementation: we compute the interlink, calculate the commitment, create a transaction with a tagged SPV output and send it. Here \code{wallet.send} additionally takes care of the funding we saw in the previous implementation.
@@ -376,8 +396,10 @@ Whenever a new block occurs we calculate the interlink and send a transaction wi
   }
 \end{lstlisting}
 
+\dznote{Would you like to write here a few words about the change addresses and other details?}
+
 \subsection{Calculating the Interlink}
-Here we implement the naive approach that we discussed in the previous implementation for calculating the interlink. We can safely do this as there are no speed concerns, seeing that we have direct access to our chain and no JSON-RPC calls need to transpire here. This makes this procedure almost instant.
+Here we implement the naive approach that we discussed in the previous implementation for calculating the interlink. We can safely do this as there are no speed concerns, seeing that we have direct access to our chain and no JSON-RPC calls need to transpire here. This makes the procedure almost instant.
 
 \begin{lstlisting}[language=js]
   async getInterlinkSinceBlock(blockId) {
@@ -398,7 +420,7 @@ Here we implement the naive approach that we discussed in the previous implement
 \end{lstlisting}
 
 \subsection{Interlink Representation}
-In similar fashion to the previous implementation we represent the interlink as a Plain Old JavaScript Object. Note that here our \code{update} is destructive in contrast as we don't utilize the immutability for caching.
+In similar fashion to the previous implementation we represent the interlink as a Plain Old JavaScript Object. Note that here, in contrast, our \code{update} is destructive as we don't utilize the immutability for caching.
 
 \begin{lstlisting}[language=js]
 class Interlink {
@@ -418,7 +440,9 @@ class Interlink {
 }
 \end{lstlisting}
 
-Calculating the commitment here is much easier here, as bcash provides as with a good API for creating and manipulating Bitcoin-style Merkle Trees.
+\dznote{Maybe you can give an example of how the \texttt{update} function would work over multiple invocations. It's not clear at first sight.}
+
+Calculating the commitment is much easier here, as bcash provides us with a good API for creating and manipulating Bitcoin-style Merkle Trees.
 
 \begin{lstlisting}[language=js]
   hash() {
@@ -445,8 +469,7 @@ module.exports = function taggedSPVOutput(buffer) {
 
 \subsection{Distribution}
 
-Our software is production-grade and we release it under the open source MIT license.
-\footnote{The code is available at \url{https://github.com/gtklocker/bcash-interlinker-js}}.
+Our software is production-grade and we release it under the open source MIT license\footnote{The code is available at \url{https://github.com/gtklocker/bcash-interlinker-js}}.
 
 \section{Deployment}
 At the time of writing of this thesis, both implementations run in production on the Bitcoin Cash testnet chain and have been running for over 3 months. We started with our first deployment late September 2018, with the first prototype of our Python interlinker. This gave us a chance to catch bugs that only appear on long running processes and make sure our software is resilient to network and other library failures. As new features and bug fixes kept rolling in our software we continuously updated the deployments.
@@ -457,17 +480,25 @@ In order to minimize the dependencies and complexity of running this software we
 
 We provide \code{Dockerfile}s for both our implementations.
 
+\dznote{List (parts of) your docker files. If they're long, put them in the appendix.}
+
 \subsection{docker-compose}
 
 We also rely on docker-compose~\cite{docker-compose} in order to make deployments easy, having a single configuration which describes for example how the ABC node and our Python interlinker should be wired together in order to work well. All in all, this makes for a very quick and painless deployment process, allowing any interested party to run the interlinker on their own. docker-compose was especially invaluable in painlessly keeping our deployment in sync with our continuously changing codebases.
 
 We provide reference \code{docker-compose.yml} files for both our implementations.
 
+\dznote{List your docker-compose files, here or in the appendix. Also say that they are included in the respective repositories.}
+
 \section{Experimental Data}
 \pdffigure{testnet-deployment-reliability}{Reliability of our testnet deployment.}
 
-We will now examine real-world data gathered from our Bitcoin Cash testnet deployment. On Figure~\ref{fig:testnet-deployment-reliability} we can look at the reliability of our interlinker deployment. We can see that about 60\% of the blocks have been correctly interlinked with our velvet transactions, and about 10\% of them only have 1 interlink pointer missing, which makes them potentially usable. With $\infty$ we denote the case where all pointers are missing due to a block only having incorrect interlinks or no interlinks at all.
+We now examine real-world data gathered from our Bitcoin Cash testnet deployment. On Figure~\ref{fig:testnet-deployment-reliability} we present the reliability of our interlinker deployment. We see that about 60\% of the blocks have been correctly interlinked with our velvet transactions, and about 10\% of them only have 1 interlink pointer missing, which makes them potentially usable. With $\infty$ we denote the case where all pointers are missing due to a block only having incorrect interlinks or no interlinks at all.
 
 \pdffigure{bitcoin-cash-testnet-levels}{Level distribution on Bitcoin Cash testnet.}
 
+\dznote{Consider log-scale.}
+
 On Figure~\ref{fig:bitcoin-cash-testnet-levels} we see the level distribution on the Bitcoin Cash testnet. As expected, the level growth is logarithmic compared to the chain length.
+
+\dznote{I'm happy with this whole chapter. I think some more details can be added, but overall it is good.}
