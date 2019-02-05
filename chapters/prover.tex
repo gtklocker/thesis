@@ -234,12 +234,176 @@ A departure from the exact algorithm is that in our implementation we don't retu
 \end{lstlisting}
 
 \subsection{Finding the Velvet Upchain}
-Utilizing the \code{followUp} algorithm to implement Algorithm~\ref{alg.nipopow-velvet-upchain} is also pretty straightforward. However instead of only $\chain \upchain^\mu$ we would like to implement $\chain\upchain^\mu{B:}$ as this is needed by the prover. Programmatically we reference $B$ by its id as  \code{leftBlockId}. The original algorithm repeatedly calls to \code{followUp} until it has reached the genesis. 
+Utilizing the \code{followUp} algorithm to implement Algorithm~\ref{alg.nipopow-velvet-upchain} is also pretty straightforward. However instead of only $\chain \upchain^\mu$ we would like to implement $\chain\upchain^\mu\{B:\}$ as this is needed by the prover. Programmatically we reference $B$ by its id as  \code{leftBlockId}. The original algorithm repeatedly calls to \code{followUp} until it has reached the genesis, which in code can be optimized away as we know that we only need blocks after (and including) $B$. This is why we \code{followUp} until $B$ only, and take care of the special case where $B$ is not a $\mu$ superblock. We look for the path from \code{followUp} for any blocks which are left of $B$ in the chain. If that is the case, the algorithm only keeps the part of the path which is right of $B$, and $B$ if it is included in the path and then exits.
+
+\begin{lstlisting}[language=Javascript]
+  findVelvetUpchain(
+    mu: Level,
+    leftBlockId: BlockId,
+    rightBlockId: ?BlockId = this.lastBlock
+  ): {
+    muSubchain: Array<BlockId>,
+    wholePath: Array<BlockId>
+  } {
+    const genesis = nullthrows(this.genesis);
+    let id = nullthrows(rightBlockId);
+
+    let wholePath = [];
+    let muSubchain = [];
+    if (level(id) >= mu) {
+      muSubchain.push(id);
+    }
+
+    let goneTooFar = false;
+    while (!id.equals(leftBlockId) && !id.equals(genesis) && !goneTooFar) {
+      let path = this.followUp(id, mu);
+      let outOfRangePathIndex = _.findLastIndex(path, x =>
+        this.isLR(x, leftBlockId)
+      );
+      if (outOfRangePathIndex !== -1) {
+        path.splice(0, outOfRangePathIndex + 1);
+        goneTooFar = true;
+      }
+
+      id = path[0];
+
+      if (level(id) >= mu) {
+        muSubchain.push(id);
+      }
+      wholePath = path.slice(1).concat(wholePath);
+    }
+
+    wholePath = [id, ...wholePath];
+
+    muSubchain.reverse();
+    return {
+      muSubchain,
+      wholePath
+    };
+  }
+\end{lstlisting}
 
 \subsection{Crafting Suffix Proofs}
+\begin{lstlisting}[language=Javascript]
+function suffixProof({
+  chain: C,
+  k,
+  m
+}: {
+  chain: VelvetChain,
+  k: number,
+  m: number
+}): Array<BlockId> {
+  let leftId = nullthrows(C.genesis);
+  let pi: Array<BlockId> = [],
+    chi: Array<BlockId> = [];
+  let rightMostStableId = C.idAt(-k - 1);
+  let maxMu = C.interlinkSizeOf(rightMostStableId);
+
+  for (let mu = maxMu; mu >= 0; --mu) {
+    let { muSubchain, wholePath } = C.findVelvetUpchain(
+      mu,
+      leftId,
+      rightMostStableId
+    );
+    let newBlocks = wholePath;
+    if (mu > 0) {
+      if (muSubchain.length <= m) {
+        continue;
+      }
+      leftId = muSubchain[muSubchain.length - m];
+      let leftIdInWholePath = newBlocks.findIndex(id => id.equals(leftId));
+      newBlocks = newBlocks.slice(0, leftIdInWholePath);
+    }
+    pi = pi.concat(newBlocks);
+  }
+
+  for (let i = -k; i < 0; ++i) {
+    chi.push(C.idAt(i));
+  }
+
+  return pi.concat(chi);
+}
+\end{lstlisting}
+
 \subsection{Following Down}
+\begin{lstlisting}[language=Javascript]
+function followDown(C: VelvetChain, hi: BlockId, lo: BlockId) {
+  let B = hi;
+  let aux = [];
+  let mu = level(hi);
+  assert(C.heightOf(hi) >= C.heightOf(lo));
+  while (!B.equals(lo)) {
+    let Bp = C.levelledPrev(B, mu);
+    if (C.heightOf(Bp) < C.heightOf(lo)) {
+      --mu;
+    } else {
+      if (!B.equals(hi)) {
+        aux = [B, ...aux];
+      }
+      B = Bp;
+    }
+  }
+  return aux;
+}
+\end{lstlisting}
+
 \subsection{Going Back}
+\begin{lstlisting}[language=Javascript]
+function goBack(C: VelvetChain, lo: BlockId, hi: BlockId) {
+  let aux = [];
+  assert(C.heightOf(hi) <= C.heightOf(lo));
+  while (!lo.equals(hi)) {
+    for (let mu = level(hi); mu >= 0; --mu) {
+      const b = C.levelledPrev(lo, mu);
+      if (C.heightOf(b) >= C.heightOf(hi)) {
+        lo = b;
+        aux.unshift(lo);
+        break;
+      }
+    }
+  }
+  aux.shift();
+  return aux;
+}
+\end{lstlisting}
+
 \subsection{Crafting Infix Proofs}
+\begin{lstlisting}[language=Javascript]
+function infixProof({
+  chain: C,
+  blockOfInterest: B,
+  k,
+  m
+}: {
+  chain: VelvetChain,
+  blockOfInterest: BlockId,
+  k: number,
+  m: number
+}): Array<BlockId> {
+  const suffixP = suffixProof({ chain: C, k, m });
+  if (suffixP.some(x => x.equals(B))) {
+    return suffixP;
+  }
+
+  const pi = suffixP.slice(0, -k),
+    chi = suffixP.slice(-k);
+
+  const afterBIndex = _.findIndex(pi, e => C.heightOf(e) >= C.heightOf(B));
+  const afterBBlock = pi[afterBIndex];
+  const beforeBIndex = Math.max(afterBIndex - 1, 0);
+  const beforeBBlock = pi[beforeBIndex];
+
+  return [
+    ...pi.slice(0, afterBIndex),
+    ...goBack(C, B, beforeBBlock),
+    B,
+    ...followDown(C, afterBBlock, B),
+    ...pi.slice(afterBIndex),
+    ...chi
+  ];
+}
+\end{lstlisting}
 
 \subsection{Type Safety}
 To ensure code quality we opted to use Flow~\cite{flow}. Flow allowed us to have type safety while keeping all the good characteristics of JavaScript. Unfortunately this introduced a couple of complications.
