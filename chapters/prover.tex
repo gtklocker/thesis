@@ -284,6 +284,8 @@ Utilizing the \code{followUp} algorithm to implement Algorithm~\ref{alg.nipopow-
 \end{lstlisting}
 
 \subsection{Crafting Suffix Proofs}
+Using these primitives we can now move on to creating our first proofs. The interface implemented allows us to directly translate the pseudocode shown in Algorithm~\ref{alg.nipopow-velvet-prover}. The code will first initialize the two parts of the proof, \code{pi} and \code{chi} to be empty. Then it will pick $max\mu$ to be the level of the rightmost stable block, $\chain[-k]$, with $B$ initially set to the genesis block, $G$. Then for each level from $max\mu$ up to and including 0, it utilizes \code{findVelvetUpchain} to get the velvet upchain from the rightmost stable block up to and including $B$. If the $\mu$ superblocks of the chain are more than $m$, the path returned is included and $B$ is set to the $m$-th rightmost $\mu$ superblock of the path.
+
 \begin{lstlisting}[language=Javascript]
 function suffixProof({
   chain: C,
@@ -327,6 +329,18 @@ function suffixProof({
 \end{lstlisting}
 
 \subsection{Following Down}
+%  -----      -----
+%            +
+%           +
+%          +
+As we noted in Section~\ref{ssec:infix}, a proof is a valid infix proof with regards to a set of blocks if and only if it contains those blocks, and it is traversable. This means th a suffix proof is also an infix proof for any possible subset of its included blocks (assuming the infix predicate requires only block header information which is included for every block).
+
+If however, an infix proof for a specific block is required, it should be possible to augment our suffix proof with it. To do this, we implement \code{followDown}, as seen in Algorithm~\ref{alg.nipopow-infix-follow}. 
+
+The purpose of the algorithm is to link two blocks, starting from the higher-level block on the right, \code{hi} and ending at the lower-level block on the left, \code{lo}. It attempts to take the largest possible steps, using the maximum-level pointer available on \code{hi}'s valid interlink which does not surpass the block of interest. If the interlink on some block the algorithm ends up is invalid, the block's \textsf{prevId} is used instead. Continuing in this manner, a traversable path is formed between \code{hi} and \code{lo}.
+
+% TODO: improvement where we can use partially valid interlinks - we don't have this facility in code as this is a recent development, should this be included?
+
 \begin{lstlisting}[language=Javascript]
 function followDown(C: VelvetChain, hi: BlockId, lo: BlockId) {
   let B = hi;
@@ -348,7 +362,20 @@ function followDown(C: VelvetChain, hi: BlockId, lo: BlockId) {
 }
 \end{lstlisting}
 
+Following down is not enough to promote an existing suffix proof to a traversable infix proof as we will see now.
+
 \subsection{Going Back}
+%  -----A     C----
+%       |    /
+%       |   /
+%       \++B
+
+Suppose we have a suffix proof and we select two blocks, $A$ and $C$. These blocks are selected so that they are adjacent in the proof and that $B$, our block of interest, is contained between them in the underlying blockchain. Also, $C$ should be right of $A$ to avoid ambiguity. By following down we obtain a traversable path from $C$ to $B$. If we augment a suffix proof with this path, the result may not be traversable, as we have no guarantee that there is a valid path from $B$ to $A$. In order for our final proof to be traversable we have to ensure a valid path between those two blocks.
+
+To this end we implement \code{goBack}, which mimics \code{followDown} and connects \code{lo} to \code{hi} in the same manner.
+
+% TODO: goBack can be deprecated in favor of flip followDown
+
 \begin{lstlisting}[language=Javascript]
 function goBack(C: VelvetChain, lo: BlockId, hi: BlockId) {
   let aux = [];
@@ -369,6 +396,16 @@ function goBack(C: VelvetChain, lo: BlockId, hi: BlockId) {
 \end{lstlisting}
 
 \subsection{Crafting Infix Proofs}
+Using these tools we are able to craft our infix proofs. The implementation works only for a single block of interest, $B$, but can be easily extended to multiple such blocks. It is assumed that the infix predicate depends only on block header data. The algorithm starts by creating a standard suffix proof. In case the suffix proof already contains the block of interest the suffix proof is enough and can be returned. Otherwise, it will find the blocks in the proof before and after $B$: $A$ and $C$. Then the proof returned will be a concatenation of the following:
+
+\begin{itemize}
+  \item The suffix proof up to and including $A$.
+  \item The path obtained via \code{goBack}, ordered from $A$ to $B$.
+  \item $B$.
+  \item The path obtained via \code{followDown}, ordered from $B$ to $C$.
+  \item The rest of the suffix proof starting from $C$.
+\end{itemize}
+
 \begin{lstlisting}[language=Javascript]
 function infixProof({
   chain: C,

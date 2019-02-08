@@ -121,6 +121,7 @@ $$ \pi = \pi_{max\mu} || \pi_{max\mu-1} || \ldots || \pi_0 $$
 It's important to notice that the chain provided to the verifier is an actual chain: one can start at the end and traverse it until the genesis block by utilizing the interlink of each block, similar to how they would do that on a conventional blockchain by using each block's $\sf previd$.
 
 \subsection{Infix Proofs}
+\label{ssec:infix}
 For the verifier to be able to determine a predicate on one or more blocks ($\chain' \subseteq \chain$) of our chain, we have to make sure we include them in a proof. A suffix proof is not guaranteed to include all blocks of interest in $\chain'$. In order to include these we have to make sure they are linked to the proof, e.g. that the proof chain is a traversable. To this end, let's assume some arbitrary block $B \in \chain'$. Let's also assume an existing suffix proof $\pi\chi$. We find blocks $E'$ and $E$ on the suffix proof, such that:
 
 \begin{itemize}
