@@ -3,4 +3,5 @@ paper.pdf: paper.tex bibliography.bib preamble.sty chapters/* figures/* algorith
 
 .PHONY: clean
 clean:
-	git clean -Xdf
+	rm -rf latex.out/
+	rm -f paper.pdf
