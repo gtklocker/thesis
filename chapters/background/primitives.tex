@@ -18,7 +18,7 @@ Each user is assumed to have a \textit{key pair} composed of a \textit{public ke
 
 \begin{itemize}
   \item $Encrypt_{public}(m)$
-  \item $Decrypt_{private}(m)$ where $\forall m: \exists! enc: Decrypt_{private}(enc) = m \land enc = Encrypt_{public}(m)$ and it is difficult for someone without $public$ to create such an $enc$
+  \item $Decrypt_{private}(m)$ where $\forall m: \exists! enc: Decrypt_{private}(enc) = m \land enc = Encrypt_{public}(m)$ and it is difficult for someone with $enc$ but without $private$ to discover $m$
   \item $Sign_{private}(m) = Encrypt_{private}(m)$
   \item $Verify_{public}(m) = Decrypt_{public}(m)$ where $\forall m: \exists! sig: Verify_{public}(sig) = True \land sig = Sign_{private}(m)$ and it is difficult for someone without $private$ to create such a $sig$
 \end{itemize}
