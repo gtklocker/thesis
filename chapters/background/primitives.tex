@@ -13,14 +13,12 @@ Bitcoin utilizes two hash functions, SHA256 ($\kappa=256$) and RIPEMD160 ($\kapp
 
 This work and the works it is based on \cite{nipopows} operate under the Random Oracle model where hash functions are assumed to have uniformly distributed outputs in their output domain, meaning that $\forall x, y: Pr[H(x) = y] = \frac{1}{2^\kappa}$.
 
-\subsection{Public-key Cryptography}
-Each user is assumed to have a \textit{key pair} composed of a \textit{public key} which can be shared freely and a \textit{private key} which should be kept secret. A public-key cryptographic system should implement the following operations:
+\subsection{Public-key Signatures}
+Each user is assumed to have a \textit{key pair} composed of a \textit{public key} which can be shared freely and a \textit{private key} which should be kept secret. A public-key cryptographic system should implement the following operations for signatures:
 
 \begin{itemize}
-  \item $Encrypt_{public}(m)$
-  \item $Decrypt_{private}(m)$ where $\forall m: \exists! enc: Decrypt_{private}(enc) = m \land enc = Encrypt_{public}(m)$ and it is difficult for someone with $enc$ but without $private$ to discover $m$
-  \item $Sign_{private}(m) = Encrypt_{private}(m)$
-  \item $Verify_{public}(m) = Decrypt_{public}(m)$ where $\forall m: \exists! sig: Verify_{public}(sig) = True \land sig = Sign_{private}(m)$ and it is difficult for someone without $private$ to create such a $sig$
+  \item $Sig_{sk}(m)$
+  \item $Ver_{pk}(m)$ where $\forall m: \forall sig: Ver_{pk}(sig) = True \rightarrow sig = Sig_{sk}(m)$ and it is difficult for someone without $pk$ to create such a $sig$
 \end{itemize}
 
 Bitcoin utilizes \textit{ECDSA}, which is based on elliptic curves, as its public-key cryptography implementation.
