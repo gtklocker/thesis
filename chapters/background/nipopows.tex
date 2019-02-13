@@ -8,7 +8,19 @@ Before we talk about the specifics of proofs we first have to define our setting
 
 A verifier is a party who wishes to know something about our blockchain. It's assumed it doesn't have network access (i.e. it can't be a full node). A verifier can be thought of as a Turing Machine which takes one or more proofs as input, and then determines whether a predicate is true or not. The only information the verifier knows is the genesis id of the chain it wants to decide predicates on.
 
-Provers are parties with access to our blockchain's network, who wish to communicate to the verifier and convince them about a predicate.
+Provers are parties with access to the Bitcoin network, the longest chain and all the transactions. They wish to communicate to the verifier and convince them about a predicate.
+
+We distinguish provers as honest and malicious. An honest prover will generate proofs which are true according to the state of the chain he is aware of. A malicious prover may try to submit false proofs in order to gain some advantage. For example, a verifier may be a merchant, who, upon confirming that his client, Bob, has paid for a product will ship it to them. In this case it is in the best interest of Bob to submit a malicious proof which makes it appear like he has paid for the product when in reality he has not.
+
+\subsection{Single-Prover Proofs}
+\subsubsection{Chain Validity Proof}
+Suppose we have a chain $\chain$ and we wish to prove to the verifier that it is a valid chain. It is easy to do this by supplying the whole chain to the verifier, who can sequentially, starting from the newest block, verify that the previous block hashes to the hash found on the newest block's \textsf{previd}. The process can be repeated until the genesis block is reached where the verifier can accept the chain as valid.
+
+\subsubsection{Transaction Inclusion In Selected Block Proof}
+If we have a transaction $tx$ which we wish to prove exists in a block $B$, then we can just generate a Merkle proof for the inclusion of the transaction's id. Given $B$, $tx$ and the Merkle proof, the verifier can then verify the Merkle proof against the Merkle tree root inside the header of $B$ to confirm that $tx \in B$.
+
+\subsubsection{Transaction Inclusion In A Valid Chain Proof}
+In order to prove that a transaction $tx$ is included in some valid chain we can very easily combine the above proofs. Suppose that $tx \in B$. Then by providing a chain validity proof for the chain that contains $B$ and a transaction inclusion proof for $B$, the verifier can accept if and only if both proofs are valid and the chain provided includes $B$.
 
 \subsection{Sublinear SPV}
 We would like to be able to prove statements like:
