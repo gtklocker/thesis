@@ -35,3 +35,20 @@ bitcoin ideal:
 	many to one
 	* script
 * blocks
+
+-------
+Feb
+
+* abstract
+* bib
+* interlinker: blockset construction, savings in proofs of inclusion in interlinks
+* prover: # probably not # concrete savings in one nipopow proof
+* conclusion (proof consumption): 
+	* summary of our results
+		we velvt forked bcash testnet, we made interlinker, prover, in production, 
+	* consuming data
+		now people can do: verifier, superlight clients, crosschain [cite powsidechains]
+	* future work
+		calculate concrete savings for block, velvet fork mainnet, interlink other important blockchains (EIP which will do that for ETH) (btc, eth, etc, monero, dash), smart contract verifier for crosschain [christoglou - not prod, not velvet-capable], interoperability with pos sidechains [possidechains]
+* graphs for both mainnet and testnet
+* creative commons in appendix
