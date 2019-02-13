@@ -18,10 +18,12 @@ Each user is assumed to have a \textit{key pair} composed of a \textit{public ke
 
 \begin{itemize}
   \item $Encrypt_{public}(m)$
-  \item $Decrypt_{private}(m)$ where $\forall m: \exists! enc: Decrypt_{private}(enc) = m \land enc = Encrypt_{public}(m)$
+  \item $Decrypt_{private}(m)$ where $\forall m: \exists! enc: Decrypt_{private}(enc) = m \land enc = Encrypt_{public}(m)$ and it is difficult for someone without $public$ to create such an $enc$
   \item $Sign_{private}(m) = Encrypt_{private}(m)$
-  \item $Verify_{public}(m) = Decrypt_{public}(m)$ where $\forall m: \exists! sig: Verify_{public}(sig) = True \land sig = Sign_{private}(m)$
+  \item $Verify_{public}(m) = Decrypt_{public}(m)$ where $\forall m: \exists! sig: Verify_{public}(sig) = True \land sig = Sign_{private}(m)$ and it is difficult for someone without $private$ to create such a $sig$
 \end{itemize}
+
+Bitcoin utilizes \textit{ECDSA}, which is based on elliptic curves, as its public-key cryptography implementation.
 
 \subsection{\label{sec:merkle-trees}Merkle Trees}
 A Merkle tree~\cite{merkle} is a data structure which allows a party to commit to a set of items using only a single hash, and prove the inclusion of any item in the committed set by providing a logarithmic proof in terms of the cardinality of the set.
