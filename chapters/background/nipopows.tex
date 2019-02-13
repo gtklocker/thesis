@@ -13,6 +13,8 @@ Provers are parties with access to the Bitcoin network, the longest chain and al
 We distinguish provers as honest and malicious. An honest prover will generate proofs which are true according to the state of the chain he is aware of. A malicious prover may try to submit false proofs in order to gain some advantage. For example, a verifier may be a merchant, who, upon confirming that his client, Bob, has paid for a product will ship it to them. In this case it is in the best interest of Bob to submit a malicious proof which makes it appear like he has paid for the product when in reality he has not.
 
 \subsection{Single-Prover Proofs}
+There are many interesting statements a verifier can be certain about by utilizing only a single prover. We say that a chain is \textit{valid} iff it is structurally sound, which we also call \textit{traversable}.
+
 \subsubsection{Chain Validity Proof}
 Suppose we have a chain $\chain$ and we wish to prove to the verifier that it is a valid chain. It is easy to do this by supplying the whole chain to the verifier, who can sequentially, starting from the newest block, verify that the previous block hashes to the hash found on the newest block's \textsf{previd}. The process can be repeated until the genesis block is reached where the verifier can accept the chain as valid.
 
@@ -21,6 +23,21 @@ If we have a transaction $tx$ which we wish to prove exists in a block $B$, then
 
 \subsubsection{Transaction Inclusion In A Valid Chain Proof}
 In order to prove that a transaction $tx$ is included in some valid chain we can very easily combine the above proofs. Suppose that $tx \in B$. Then by providing a chain validity proof for the chain that contains $B$ and a transaction inclusion proof for $B$, the verifier can accept if and only if both proofs are valid and the chain provided includes $B$.
+
+It is important to note that our definition of validity is less strict than a full node's definition of validity. As a full node, it is possible to check that every transaction in a block is valid, and if and only if this is true, and the block is well-formed and valid under Proof-of-Work consider a block valid. 
+
+% TODO: full-node vs spv tradeoff
+
+\subsection{Multi-Prover Proofs}
+However, while a single prover is enough for some types of proofs, some are impossible to achieve without multiple provers. For example, convincing a verifier that we hold the longest Bitcoin chain would be impossible to do, because a prover could very easily be malicious and present a shorter chain. Without taking extra input from other provers and assuming that there exists at least one honest prover, it is impossible for a verifier to be certain. Those are two assumptions we will make for the following proofs.
+
+\subsubsection{Longest Chain Proof}
+Suppose we have a chain $\chain$ and we wish to prove to the verifier that it is the longest chain. We submit the whole chain to the prover, as do the rest of the provers. The verifier then verifies each given chain for validity and discards any invalid chains. For the remaining chains it compares them and keeps the longest one.
+
+\subsubsection{Transaction Inclusion In The Longest Chain}
+As previously, suppose $tx \in B$. We provide the whole chain, along with the Merkle proof for $tx \in B$. The verifier collects proofs of this kind and selects the longest valid chain. Then for all transaction inclusion proofs taken it checks whether the claimed block is included in the longest chain and the transaction inclusion proof is valid. If there is at least one transaction inclusion proof satisfying this requirement then the transaction is accepted, otherwise it is rejected.
+
+Verifying this kind of proof is very similar to the operations a lite node does to verify transactions claimed to be on the longest chain that we viewed in Section \ref{subsec:spv}, which is why these proofs are called SPV proofs. These proofs are all linear in the size of the chain.
 
 \subsection{Sublinear SPV}
 We would like to be able to prove statements like:
