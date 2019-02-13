@@ -1,21 +1,15 @@
 \section{Non-Interactive Proofs of Proofs of Work}
-
-% more intro TODO
-% cite backbone model (proven secure in) TODO
-
-\subsection{Sublinear SPV}
-We would like to be able to prove statements like:
-
-\begin{itemize}
-  \item We have a valid chain where the last $k$ blocks are the ones we're claiming. This is called a \textbf{suffix proof}.
-  \item We have a valid chain where a specific given block is included. This is called an \textbf{infix proof}.
-\end{itemize}
-
-Our current best solution, SPV, requires providing the whole chain's block headers as proof. This is obviously linear in the size of the chain.
+Seeing that proofs are linear in the chain length, it is normal to ask if we can do better. NIPoPoW \cite{nipopows} provides the first family of succinct proofs which are logarithmic in the size of the chain and proven secure in the Backbone \cite{backbone} protocol.
 
 There have been previous attempts to create proofs smaller in size than SPV proofs~\cite{KLS}, where a scheme for logarithmic proofs was proposed.  This scheme was later proven insecure~\cite{nipopows}.
 
-NIPoPoWs is the first secure construction~\cite{nipopows} for logarithmic proofs.
+\subsection{Terminology}
+NIPoPoWs are categorized in two kinds of proofs:
+
+\begin{itemize}
+  \item We have a valid chain where the last $k$ blocks (also called the \textit{unstable} part of the chain) are the ones we're claiming. This is called a \textbf{suffix proof}.
+  \item We have a valid chain where a specific given block is included in its \textit{stable} part (excluding the last $k$ blocks). This is called an \textbf{infix proof}.
+\end{itemize}
 
 \subsection{Assumptions}
 An assumption NIPoPoWs make is that the difficulty is constant. This is not true for Bitcoin or Bitcoin Cash.
