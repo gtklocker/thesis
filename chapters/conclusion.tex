@@ -17,4 +17,18 @@ We analyzed blockchain data from Bitcoin and Bitcoin Cash, on their mainnets and
 We provided an implementation for the \textbf{prover}, which is based on a lite node. The prover is able to interact in the Bitcoin network, and has knowledge of the velvet fork, as well as of the actual interlink of each block. It is capable of discovering the velvet transactions and recovering the interlink commitments from them, and knowing if a block has a valid interlink or not. It is capable of creating both suffix and infix proofs for Bitcoin Cash.
 
 \section{Proof Consumption}
+The velvet fork and prover together enable any user to create NIPoPoW proofs on Bitcoin Cash. These proofs can be utilized as part of many applications. We will now look at some potential applications of very high interest to the cryptocurrency community.
+
+\subsection{Super-light Clients}
+Currently lite clients operate by accepting multiple SPV proofs. As we have seen these proofs are linear in chain size. One can very easily imagine modified light clients which have the ability to verify and compare NIPoPoW proofs instead of SPV proofs in order to discover the longest chain or whether a transaction is included in the longest chain.
+
+\subsection{Cross-chain Transactions}
+Another popular application is cross-chain transactions: for example sending an amount of Bitcoin to Ethereum trustlessly. Currently when one wishes to move from one cryptocurrency to the other they usually utilize a centralized exchange. This is both time-consuming and trustless.
+
+There is also the issue of the denomination: one would usually exchange their Bitcoin for an equivalent amount of Ethereum, according to the market rate. While in some cases this is desired, it is usually the case that one desires to transfer their funds to another cryptocurrency but keep them in the original denomination.
+
+To solve this issue there are tokens in the Ethereum network like WBTC \cite{wbtc} which claim to offer an ERC20 token pegged 1:1 to Bitcoin, but have the need for a trusted third party called a custodian who is entrusted to generate tokens at will. It should be obvious that such solutions are not trustless.
+
+An alternative would be to offer such a token but have the contract issue an amount of tokens if and only if it can can be sufficiently proven that the actor who requested the issuance has burned the same amount of Bitcoin on the other chain. Many constructions of this sort have been explored in the literature \cite{xclaim}, including most importantly a construction using NIPoPoWs by Kiayias and Zindros \cite{pow-sidechains}. An implementation of this construction on the Ethereum chain has been provided by Christoglou \cite{christoglou}, however the implementation is unable to verify proofs created from velvet forked chains like the ones we are able to create and would have to be modified.
+
 \section{Future Work}
