@@ -471,3 +471,10 @@ We will now examine real-world data gathered from our Bitcoin Cash testnet deplo
 \pdffigure{bitcoin-cash-testnet-levels}{Level distribution on Bitcoin Cash testnet.}
 
 On Figure~\ref{fig:bitcoin-cash-testnet-levels} we see the level distribution on the Bitcoin Cash testnet. As expected, the level growth is logarithmic compared to the chain length.
+
+\section{Interlink Compression}
+We will now revisit the interlink encoding. Recall that we created the interlink encoding by creating a Merkle Tree with the interlink elements as its leafs and taking its root. We call this the \textit{block list} construction. During our deployment on the Bitcoin Cash network it became evident that an interlink block list construction contained lots of repetition. This repetition is not a problem in the interlink encoding itself, as it is constant. However if for example half the elements of a block list are duplicates then the Merkle Tree would be one level higher and any inclusion proof would take up one more item than if the leafs did not contain duplicates.
+
+We call the latter construction a \textit{block set} construction.
+
+TODO graphs
