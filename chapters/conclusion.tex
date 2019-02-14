@@ -29,6 +29,19 @@ There is also the issue of the denomination: one would usually exchange their Bi
 
 To solve this issue there are tokens in the Ethereum network like WBTC \cite{wbtc} which claim to offer an ERC20 token pegged 1:1 to Bitcoin, but have the need for a trusted third party called a custodian who is entrusted to generate tokens at will. It should be obvious that such solutions are not trustless.
 
-An alternative would be to offer such a token but have the contract issue an amount of tokens if and only if it can can be sufficiently proven that the actor who requested the issuance has burned the same amount of Bitcoin on the other chain. Many constructions of this sort have been explored in the literature \cite{xclaim}, including most importantly a construction using NIPoPoWs by Kiayias and Zindros \cite{pow-sidechains}. An implementation of this construction on the Ethereum chain has been provided by Christoglou \cite{christoglou}, however the implementation is unable to verify proofs created from velvet forked chains like the ones we are able to create and would have to be modified.
+An alternative would be to offer such a token but have the contract issue an amount of tokens if and only if it can can be sufficiently proven that the actor who requested the issuance has burned the same amount of Bitcoin on the other chain. Many constructions of this sort have been explored in the literature \cite{xclaim}, including most importantly a construction using NIPoPoWs by Kiayias and Zindros \cite{pow-sidechains}. An implementation of this construction in Solidity for the Ethereum chain has been provided by Christoglou \cite{christoglou}.
 
 \section{Future Work}
+\subsection{Bitcoin Cash mainnet Deployment}
+In order to make our work really useful to the general public the obvious step would be to deploy our interlinker on the mainnet network of Bitcoin Cash. This is a straightforward process, and it is directly supported by the software as is. We note that due to the low fees of Bitcoin Cash and consequently the low cost for operating an interlinker, it is very accessible for anyone to operate such a fork.
+
+\subsection{Interlink Compression Implementation}
+While we propose interlink compression, the development was very recent and has not been yet integrated in our interlinkers and prover. This change can be implemented and deployed in a backwards-compatible manner, meaning that the existing interlinks will not be rendered invalid. The changes to the interlinker implementation are fairly straightforward: only the interlink encoding would have to change. However, the prover has to support both the block list and block set constructions, and prefer the block set interlinks where available.
+
+\subsection{Implementation and Deployment For Other Major Cryptocurrencies}
+The usefulness of NIPoPoWs is not limited to Bitcoin Cash only. The software can be easily deployed on any Bitcoin-based cryptocurrency, including Bitcoin itself, only requiring minimal changes.
+
+Other than Bitcoin-based cryptocurrencies, NIPoPoWs work for any Proof-of-Work cryptocurrency. We think velvet forks like the one outlined in this work would be viable and incredibly beneficial for many other cryptocurrencies, most notably Ethereum, Ethereum Classic, and Dash.
+
+\subsection{Verifier Smart Contract Implementation}
+The Proof-of-Work sidechains implementation by Christoglou \cite{christoglou} outlined earlier is unable to verify proofs created from velvet forked chains like the ones our provers create. It is therefore necessary for the implementation to be modified in order to support such proofs. Such a contract, if deployed on the Ethereum chain would allow users to trustlessly transfer Bitcoin Cash to the Ethereum chain by making use of proofs our prover can generate for the Bitcoin Cash chain.
