@@ -2,7 +2,7 @@
 \subsection{Cryptographic Hash Functions}
 A \textit{hash function} is a function used to map data of arbitrary size to data of a fixed size. Formally, a hash function $H$ is of the form $H: D \rightarrow [0, 2^\kappa)$, where $\kappa$ is a characteristic of $H$, specifically the number of bits of its output.
 
-For a hash function to be a cryptographic hash function it has to satisfy the following properties:
+For a hash function to be a cryptographic hash function it has to satisfy the following properties \cite{katz}:
 \begin{itemize}
   \item \textbf{Pre-image resistance}: Given a hash of $h$ it should be difficult to compute an input $m$ such that $H(m) = h$.
   \item \textbf{Second pre-image resistance}: Given an input $m_1$ it should be difficult to compute an input $m_2$ such that $H(m_1) = H(m_2)$.
@@ -14,7 +14,7 @@ Bitcoin utilizes two hash functions, SHA256 ($\kappa=256$) and RIPEMD160 ($\kapp
 This work and the works it is based on \cite{nipopows} operate under the Random Oracle model where hash functions are assumed to have uniformly distributed outputs in their output domain, meaning that $\forall x, y: Pr[H(x) = y] = \frac{1}{2^\kappa}$.
 
 \subsection{Public-key Signatures}
-Each user is assumed to have a \textit{key pair} composed of a \textit{public key} which can be shared freely and a \textit{private key} which should be kept secret. A public-key cryptographic system should implement the following operations for signatures:
+Each user is assumed to have a \textit{key pair} composed of a \textit{public key} which can be shared freely and a \textit{private key} which should be kept secret. A public-key cryptographic system should implement the following operations for signatures \cite{katz}:
 
 \begin{itemize}
   \item $Sig_{sk}(m)$
