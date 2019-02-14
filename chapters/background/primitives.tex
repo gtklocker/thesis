@@ -62,3 +62,37 @@ An example of a Bitcoin Merkle tree, along with a proof of inclusion for $K$ can
 \end{figure}
 
 \subsection{Bloom Filters}
+A \textit{bloom filter} is a probabilistic data structure allowing queries for set inclusion \cite{bloom}. Specifically, a set of items is transformed to a bit vector size $m$. Starting from an empty bit vector of all zeroes, let us examine how we change the bit vector to indicate that an element is included in the set. Let us assume that we have $k$ hash functions $h_1, \dots, h_k$, where $\forall x \forall i \in [0, k]: h_i(x) \in [0, m-1]$.
+
+The algorithm for item insertion seen in Algorithm \ref{alg:bloom-insertion} gets $k$ values from all the hash functions on the new item, and then uses those values as indices. Every index indicates a bit that will be turned on in the new array. The new bloom filter is then returned.
+
+\begin{algorithm}[H]
+  \caption{\label{alg:bloom-insertion}The \textsf{Insert} algorithm
+    for a Bloom Filter.}
+    \begin{algorithmic}[1]
+      \Function{Insert}{\sf vec, item}
+        \For{$i \gets 1$ to $k$}
+          \Let{\mathsf{vec}[h_i(\mathsf{item})]}{1}
+        \EndFor
+        \State\Return{\sf vec}
+      \EndFunction
+    \end{algorithmic}
+\end{algorithm}
+
+Testing a bloom filter for inclusion of an item is equally easy, as seen on Algorithm \ref{alg:bloom-query}. The item again passes through the $k$ hash function and the algorithm returns true if and only if all the indices pointed out by the $k$ outputs are 1 bits on the array. It should be obvious however that there may be false positives, which is why it is necessary for an extra step in case one needs to be certain that the item is really included in the set.
+
+\begin{algorithm}[H]
+  \caption{\label{alg:bloom-query}The \textsf{Query} algorithm
+    for a Bloom Filter. May return false positives.}
+    \begin{algorithmic}[1]
+      \Function{Query}{\sf vec, item}
+        \Let{\mathsf{flag}}{1}
+        \For{$i \gets 1$ to $k$}
+          \If{$\mathsf{vec}[h_i(\mathsf{item})] \neq 1$}
+            \State\Return{\sf False}
+          \EndIf
+        \EndFor
+        \State\Return{\sf True}
+      \EndFunction
+    \end{algorithmic}
+\end{algorithm}
