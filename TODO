@@ -42,7 +42,7 @@ Feb
 * abstract
 * bib
 * interlinker: blockset construction, savings in proofs of inclusion in interlinks
-* prover: # probably not # concrete savings in one nipopow proof
+* prover: # probably not # concrete savings in one nipopow proof, interlink reuse
 * conclusion (proof consumption): 
 	* summary of our results
 		we velvt forked bcash testnet, we made interlinker, prover, in production, 
