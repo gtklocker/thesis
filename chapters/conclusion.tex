@@ -38,9 +38,10 @@ In order to make our work really useful to the general public the obvious step w
 \subsection{Interlink Compression Implementation}
 While we propose interlink compression, the development was very recent and has not been yet integrated in our interlinkers and prover. This change can be implemented and deployed in a backwards-compatible manner, meaning that the existing interlinks will not be rendered invalid. The changes to the interlinker implementation are fairly straightforward: only the interlink encoding would have to change. However, the prover has to support both the block list and block set constructions, and prefer the block set interlinks where available.
 
-\subsection{Implementation and Deployment For Other Major Cryptocurrencies}
+\subsection{Bitcoin Deployment}
 The usefulness of NIPoPoWs is not limited to Bitcoin Cash only. The software can be easily deployed on any Bitcoin-based cryptocurrency, including Bitcoin itself, only requiring minimal changes.
 
+\subsection{Implementation For Other Major Cryptocurrencies}
 Other than Bitcoin-based cryptocurrencies, NIPoPoWs work for any Proof-of-Work cryptocurrency. We think velvet forks like the one outlined in this work would be viable and incredibly beneficial for many other cryptocurrencies, most notably Ethereum, Ethereum Classic, and Dash.
 
 \subsection{Verifier Smart Contract Implementation}
