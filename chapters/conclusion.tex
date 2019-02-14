@@ -1,5 +1,20 @@
 \chapter{Conclusion}
 
 \section{Summary}
+In this work we have studied the state-of-the-art constructions for creating proofs in the Prover-Verifier Model. We adapted the most fit construction for the purpose, NIPoPoWs, for the Bitcoin setting, by utilizing the User Activated Velvet Fork deployment strategy outlined in the NIPoPoWs paper and sidestepping the constant difficulty requirement.
+
+
+We designed and implemented the specifics of the Velvet Fork, including methods for encoding the interlink. We paid close attention to the consumption of the interlinks, making them easily consumable by lite nodes by utilizing SPV tagged outputs.
+
+We provided two implementations for the \textbf{interlinker}, an implementation which requires a full-node and one which is based on a lite-node with SPV. These implementations actually create the velvet fork and can be easily adapted to fork on any Bitcoin-based cryptocurrency, as well as perform any other kind of velvet fork. They are both released as open-source and are production-grade software.
+
+We deployed the interlinker implementations on the Bitcoin Cash testnet, closely monitoring their performance and reliability, while fixing any anomalies due to bugs in our software as they developed. 
+
+We provided cost estimates for deploying our User-Activated Velvet Fork on Bitcoin Cash mainnet, where it can be seen that even though one needs to spend one transaction per block, due to the low fees on Bitcoin Cash is incredibly manageable even for individuals.
+
+We analyzed blockchain data from Bitcoin and Bitcoin Cash, on their mainnets and testnets and discovered that the interlink encoding could be improved. We provided an optimization for interlink encoding based on our observations called \textbf{interlink compression}. We provided statistics which indicate how much of an improvement such a change can bring on real-world blocks.
+
+We provided an implementation for the \textbf{prover}, which is based on a lite node. The prover is able to interact in the Bitcoin network, and has knowledge of the velvet fork, as well as of the actual interlink of each block. It is capable of discovering the velvet transactions and recovering the interlink commitments from them, and knowing if a block has a valid interlink or not. It is capable of creating both suffix and infix proofs.
+
 \section{Proof Consumption}
 \section{Future Work}
