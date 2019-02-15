@@ -16,7 +16,12 @@ There's also the issue of user experience: even using a lite node at this point 
 \emph{NIPoPoWs}~\cite{nipopows} are a recent blockchain primitive allowing proofs on the blockchain of only logarithmic size instead of linear. These succinct proofs turn out to be key in solving problems like the above. One-way pegged contracts don't need to know about the whole blockchain, and lite nodes don't need to know all block headers to have the same security assurances.
 
 \section{Related Work}
-\section{Objectives}
+The first solution for short proofs came directly from the original Bitcoin paper \cite{bitcoin} in the form of SPV. The main idea of SPV, Merkle Tree Proofs, which we will be studying in depth shortly, is very useful for transaction inclusion proofs with NIPoPoWs as well.
+
+Although NIPoPoWs are a very recent development, implementations have already been developed. Most notably, a verifier smart contract has been developed by Christoglou \cite{christoglou}, which validates and compares NIPoPoW proofs to find the best, and can be used as a basis for cross-chain transactions. This implementation however assumes proofs on a blockchain which contains the interlink on its headers, which is something untrue for most popular cryptocurrencies.
+
+There are however cryptocurrencies of this form built from the ground up with NIPoPoWs in mind. Most notably, Ergo \cite{ergo}, Nimiq \cite{nimiq} and WebDollar \cite{webdollar}.
+
 \section{Structure}
 
 % why bitcoin cash TODO
