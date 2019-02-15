@@ -1,0 +1,22 @@
+\begin{algorithm}[H]
+    \caption{\label{alg.nipopow-verifier}The \textsf{Verify} algorithm
+    for the NIPoPoW protocol. Source: NIPoPoWs paper \cite{nipopows}}
+    \begin{algorithmic}[1]
+        \Function{\sf Verify$^Q_{m,k}$}{$\mathcal{P}$}
+            \Let{\tilde\pi}{(\text{Gen})}
+              \Comment{Trivial anchored blockchain}
+            \For{$(\pi, \chi) \in \mathcal{P}$}
+                \Comment{Examine each proof $(\pi, \chi)$ in $\mathcal{P}$}
+                \If{$\mathsf{validChain}(\pi \chi)
+                    \land |\chi| = k
+                    \land \pi \geq_m \tilde\pi$}
+                    \State{$\tilde\pi \gets \pi$}
+                    \State{$\tilde\chi \gets \chi$}
+                    \Comment{Update current best}
+                \EndIf
+            \EndFor
+            \State\Return{$\tilde{Q}(\tilde\chi)$}
+        \EndFunction
+    \vskip8pt
+    \end{algorithmic}
+\end{algorithm}

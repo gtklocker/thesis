@@ -1,0 +1,23 @@
+\begin{algorithm}[H]
+    \caption{\label{alg.nipopow-maxchain}The algorithm implementation for the
+    $\geq_m$ operator to compare two proofs in the NIPoPoW protocol
+    parameterized with security parameter $m$. Returns \emph{true} if the underlying
+    chain of player $A$ is deemed longer than the underlying chain of player
+    $B$. Source: NIPoPoWs paper \cite{nipopows}}
+
+    \begin{algorithmic}[1]
+        \Function{{\sf best-arg}$_m$}{$\pi, b$}
+            \Let{M}{\{\mu: |\pi\upchain^\mu\{b:\}| \geq m\} \cup \{0\}}
+            \Comment{Valid levels}
+            \State\Return{$\max_{\mu \in M}\{2^\mu  \cdot |\pi\upchain^\mu\{b:\}|\}$}
+            \Comment{Score for level}
+        \EndFunction
+        \Operator{$\pi_A \geq_m \pi_B$}
+            \Let{b}{(\pi_\mathcal{A} \cap \pi_B)[-1]}
+              \Comment LCA
+            \State\Return{$\textsf{best-arg}_m(\pi_A, b) \geq
+                           \textsf{best-arg}_m(\pi_B, b)$}
+        \EndOperator
+    \vskip8pt
+    \end{algorithmic}
+\end{algorithm}

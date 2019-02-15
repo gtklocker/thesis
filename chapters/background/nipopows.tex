@@ -134,8 +134,18 @@ Augmenting the original suffix proof with the new blocks provided by $\sf follow
 
 % TODO: I never talk about the infix predicate
 
-\subsection{Proof Verification}
-% TODO
+\subsection{Proof Validation}
+It is very easy to validate a proof, similarly to how we validated SPV proofs in the previous chapter: one can just check that the proof is traversable up to a known genesis, and $|\chi| = k$. Validation in the context of NIPoPoWs refers to a single-prover environment.
+
+\subsection{Suffix Proof Verification}
+In a multi-prover environment, we noted the need for a way to compare proofs. For SPV proofs this was easy, the length of each chain could be compared (as long as both chains were valid). For NIPoPoWs however the process of comparing is not as straightforward, if we consider that the number of blocks is not directly connected to chain length.
+
+In Algorithm \ref{alg.nipopow-maxchain} we show how two proofs can be compared. The algorithm finds the Lowest Common Ancestor $b$ from the stable part of both proofs, and then calculates \textsf{best-arg} on each proof from $b$ onwards. The proof with the largest \textsf{best-arg} is decided to be the better proof.
+
+\input{algorithms/alg.nipopow-maxchain.tex}
+
+Knowing how to compare two proofs, the only thing a verifier has to do is actually compare all the proofs it receives (which are collected in the set $\mathcal{P}$) and only keep the best one. This is shown in Algorithm \ref{alg.nipopow-verifier}. As an extra step, after picking the best proof $(\tilde\pi, \tilde\chi)$, this verifier for suffix proofs evaluates a predicate $\tilde{Q}$ on the suffix, or unstable part of the best proof it received.
+\input{algorithms/alg.verifier-lite.tex}
 
 \subsection{Velvet Forks}
 Velvet forks~\cite{nipopows,velvet} describe a formalization of adding arbitrary data inside blocks in order to allow potential applications without sacrificing the backwards compatibility of the blockchain.
