@@ -10,7 +10,11 @@
 \null
 
 \begin{abstract}
-  In this work we examine the real-world applications of the recent blockchain primitive called Non Interactive Proofs of Proof of Work (NIPoPoWs). We enable the use of the primitive on Bitcoin Cash by implementing the first known velvet fork on a blockchain. We provide concrete implementations for creating a velvet fork, and generating proofs on a blockchain that has been forked in this way.
+  Cryptocurrencies have seen a meteoric rise in popularity in the last 10 years since the invention of Bitcoin. It is typical for cryptocurrencies to require every participant to keep a record of all the history. As usage skyrocketed this solution obviously did not scale. The Bitcoin paper includes a solution called SPV, which reduces the amount of information a participant needs to know, however the information is still linear in chain size. NIPoPoWs (Non-Interactive Proofs of Proof-of-Work) are a new advancement, providing an improvement to logarithmic in chain size instead of linear, however the model assumed by NIPoPoWs is not directly compatible with any of the popular cryptocurrencies.
+
+  In this work we explore the implementation of NIPoPoWs on Bitcoin-based cryptocurrencies. We study how a chain can be augmented with a crucial data structure called the interlink via a User-Activated Velvet Fork. We design software called the \textit{interlinker}, which creates such a fork on a given chain. We provide two implementations of an interlinker, one which requires a full node and one which requires a lite node, both released as open-source software. We deploy our solutions on the Bitcoin Cash testnet, and produce reliability metrics for our deployment. Furthermore, we introduce a new approach for encoding interlink commitments in blocks, called \textit{interlink compression}, which reduces proof sizes even further.
+  
+  Finally, we provide a working implementation of a \textit{prover}, also released as open-source. The prover enables users to generate suffix and infix proofs on any Bitcoin-based chain which has been velvet forked using our method, including the Bitcoin Cash testnet, where our fork has been deployed. The proofs generated can then be used for super-lite clients, cross chain transactions, and more.
 \end{abstract}
 
 \newpage
