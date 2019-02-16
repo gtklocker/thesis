@@ -11,7 +11,7 @@ For a hash function to be a cryptographic hash function it has to satisfy the fo
 
 Bitcoin utilizes two hash functions, SHA256 ($\kappa=256$) and RIPEMD160 ($\kappa=160$).
 
-This work and the works it is based on \cite{nipopows} operate under the Random Oracle model where hash functions are assumed to have uniformly distributed outputs in their output domain, meaning that $\forall x, y: Pr[H(x) = y] = \frac{1}{2^\kappa}$.
+This work and the works it is based on \cite{nipopows} operate within the random oracle model, where a hash function is assumed to be a truly random function \cite{katz}.
 
 \subsection{Public-key Signatures}
 Each user is assumed to have a \textit{key pair} composed of a \textit{public key} which can be shared freely and a \textit{private key} which should be kept secret. A public-key cryptographic system should implement the following operations for signatures \cite{katz}:
