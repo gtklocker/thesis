@@ -493,6 +493,9 @@ On Figure~\ref{fig:bitcoin-cash-testnet-levels} we see the level distribution on
 \section{Interlink Compression}
 We will now revisit the interlink encoding. Recall that we created the interlink encoding by creating a Merkle Tree with the interlink elements as its leafs and taking its root. We call this the \textit{block list} construction. During our deployment on the Bitcoin Cash network it became evident that an interlink block list construction contained lots of repetition. This repetition is not a problem in the interlink encoding itself, as it is constant. However if for example half the elements of a block list are duplicates then the Merkle Tree would be one level higher and any inclusion proof would take up one more item than if the leafs did not contain duplicates.
 
-We call the latter construction a \textit{block set} construction.
+We call our construction a \textit{block set} construction, because each block id is included only once in the Merkle Tree leaves. We evaluated our construction on the Bitcoin Cash mainnet, assuming that our velvet fork genesis is the actual genesis at height 0 (unlike our velvet genesis). This allows us to examine how our solution would behave in time. In Figure \ref{fig:interlink-proof-list-vs-set} we see a comparison between the size of an interlink inclusion proof using both constructions. The block list inclusion proofs appear to grow with the size of the chain, whereas the block set inclusion proof remain almost constant around 3. The relative savings are shown in Figure \ref{fig:interlink-proof-savings-from-blockset}, where as the chain grows we see savings of up to 50\%.
 
-TODO graphs
+\pdffigure{interlink-proof-list-vs-set}{Number of elements on an interlink inclusion proof using the block list and block set constructions.}
+\pdffigure{interlink-proof-savings-from-blockset}{Interlink inclusion proof savings by utilizing the block set construction.}
+
+An example of how a block list can end up containing many duplicates is not difficult to imagine. Suppose a very high-level $\mu$-superblock is mined, and that for some period after that, at best $(\mu-\lambda)$-superblocks are mined. For that period, the block list will contain $\lambda$ duplicates.
