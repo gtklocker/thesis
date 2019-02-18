@@ -178,7 +178,7 @@ module.exports = class RealLink {
 \end{lstlisting}
 
 \subsection{Handling Merkle Blocks Redux}
-All information regarding the chain is sorted in a \code{VelvetChain} (TODO change name). A \code{VelvetChain} is the main entrypoint for block events. It is the single source of truth about the blockchain. When there is a new block, the whole block is associated with its id for later lookup, and its height is also recorded. It then gathers the block's interlink commitments and forwards them as a new event to \code{realLink}.
+All information regarding the chain is sorted in a \code{VelvetChain}. A \code{VelvetChain} is the main entrypoint for block events. It is the single source of truth about the blockchain. When there is a new block, the whole block is associated with its id for later lookup, and its height is also recorded. It then gathers the block's interlink commitments and forwards them as a new event to \code{realLink}.
 
 \begin{lstlisting}[language=Javascript]
   // ...
