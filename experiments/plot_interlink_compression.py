@@ -2,7 +2,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 
-from plot_mainnet_levels import block_ids_from_file, BITCOIN_TARGET, LITECOIN_TARGET, level
+from science import *
 from interlink import Interlink
 
 def interlink_sizes(hdr_file):
