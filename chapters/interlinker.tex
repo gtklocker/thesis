@@ -11,6 +11,23 @@ To this end, we need to make sure that a transaction is included in every single
 \section{Picking a Velvet Genesis}
 Naturally one would expect the interlink to start from the real blockchain genesis as it would enable proofs for any already existing block of that blockchain. However, for older blocks there can be no improvement. There is no other option than providing the full chain as a proof since no older blocks contain any interlinks. Thus in order to avoid accounting in our interlink for blocks in the past that can only be connected to the real genesis by supplying the full chain we choose a new genesis called the \emph{velvet genesis}. For our purposes in Bitcoin Cash testnet we chose the block with height 1257603 as our velvet genesis.
 
+\section{Faking Constant Difficulty}
+An issue with NIPoPoWs we mentioned early on, which makes them incompatible with Bitcoin is that a constant difficulty setting is assumed.  Bitcoin and Bitcoin Cash, like most well-known cryptocurrencies have variable difficulty. Although research for NIPoPoWs in the variable difficulty setting is currently underway, no clear solution exists yet. For our purposes we treat the variable difficulty blockchain as if it was a constant difficulty chain with $T_{const}=\mathsf{powLimit}$, where {\sf powLimit} is the maximum target that can be achieved in the variable difficulty chain. Assuming such a target means that all the valid blocks under variable difficulty are also valid under the fake constant difficulty, since $\forall B: id(B) \le T \le \mathsf{powLimit} = T_{const}$. \footnote{This is the most reasonable construction according to the NIPoPoWs paper authors. We do not claim or prove that this construction is secure.}
+
+It is trivial to determine {\sf powLimit} for any cryptocurrency, as it is hardcoded in the source code of any full node. Here is an example from the Litecoin source code.
+
+\begin{lstlisting}[language=C++]
+class CMainParams : public CChainParams {
+public:
+    CMainParams() {
+        strNetworkID = "main";
+        // ...
+        consensus.powLimit = uint256S("00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"); 
+        // ...
+      }
+}
+\end{lstlisting}
+
 \section{Interlink encoding}
 We now have to consider our options for representing the interlink. 
 Bitcoin Cash uses SHA-256 for the block hashes, meaning that each block id consists of 32 bytes. 
