@@ -4,13 +4,12 @@ Now that we've established a fork on the Bitcoin Cash chain, we show how our for
 
 Let's assume we have an SPV node. We set the bloom filter to our velvet fork tag in order to get all blocks containing only the transactions of the fork. It's possible to then extract from each transaction the payload, which should be the interlink commitment. 
 
-\section{JavaScript implementation with bcash}
 bcash, also used for the interlinker earlier, turns out the be the only option for an SPV node on Bitcoin Cash, making it the obvious choice for the prover.
 
-\subsection{Overview}
+\section{Overview}
 Our prover works as follows. We expect a user to run the prover, passing as a parameter if they want a suffix or infix proof. If they desire an infix proof they have to provide the block of interest. Once they do that the prover runs and syncs with the Bitcoin Cash blockchain via SPV. It does some similar work to the work that an interlinker does: it knows what the correct interlink is for each block. It then checks the included commitments on each block and keeps a valid commitment for each block if found. A block containing a valid commitment is called a \emph{valid velvet}. Interlink pointers can only be used on valid velvets. Once the chain is synced and the prover knows the valid velvets along with the whole blockchain it creates a proof of the requested type and outputs it in JSON format.
 
-\subsection{Interlink Implementation}
+\section{Interlink Implementation}
 Implementing an interlink structure is something we've already covered many times. Our implementation here is based on immutable value objects holding the interlink. Updating an interlink is done in the usual manner and creates a new interlink. What's different here is that we have a \code{proof} method: we use this method to generate a proof of inclusion of a specific pointer in the interlink commitment. We also need a way to be able to get a pointer from a specific level on the interlink and this is accomplished with the \code{at} method. Note that \code{at} can be asked for a level higher than the size of the interlink, in which case the velvet genesis is returned as it's assumed to be a block of level $\infty$.
 
 \begin{lstlisting}[language=Javascript]
@@ -54,7 +53,7 @@ class Interlink {
 }
 \end{lstlisting}
 
-\subsection{Locating Velvet Transactions}
+\section{Locating Velvet Transactions}
 Locating the velvet transactions is very easy considering that all our velvet transactions are SPV tagged. The only thing we have to do is add the SPV tag in our bloom filter. We do this right before connecting to the network.
 
 \begin{lstlisting}[language=Javascript]
@@ -68,7 +67,7 @@ module.exports = class ProverNode extends bcash.SPVNode {
 }
 \end{lstlisting}
 
-\subsection{Extracting Interlink Commitments}
+\section{Extracting Interlink Commitments}
 we have to check that the transaction the valid form described earlier (\code{OP\_RETURN <tag> <commitment>}). In order to do that we look at the outputs of each transaction and only keep any outputs of our form. If some output matches then we extract the script's third element which is the commitment.
 
 \begin{lstlisting}[language=Javascript]
@@ -91,7 +90,7 @@ const extractInterlinkHashes = compose(
 );
 \end{lstlisting}
 
-\subsection{Handling Merkle Blocks}
+\section{Handling Merkle Blocks}
 When a block or transaction of a block matches our bloom filter, the block is relayed by full nodes as a \code{merkleblock} message. MerkleBlocks contain the header of the actual block as well as the transactions ids that matched. It also contains a proof of inclusion for all the transactions ids provided. One can check this proof of inclusion with accordance to the \code{merkleRoot} inside the block header. The transactions are included in subsequent \code{tx} messages. bcash hides this process from the user: on a new block event a MerkleBlock is provided and it contains a \code{txs} record, where the transactions that matched are included in full.
 
 In order to check if we have matched transactions in a block all we have to do is check if its \code{.txs} array is non-empty. If it is not then this block is definitely not a valid velvet. If it is not, then we have to ensure a correct form and extract the commitment, also saving it. We utilize the method \code{extractInterlinkHashes} and map it over all transactions in the block.
@@ -104,7 +103,7 @@ const extractInterlinkHashesFromMerkleBlock = compose(
 );
 \end{lstlisting}
 
-\subsection{RealLink \& Verifying Interlink Commitments}
+\section{RealLink \& Verifying Interlink Commitments}
 We extend the \code{realLink} discussed earlier. Other than allowing us to get the interlink of any block it also allows us to check if a block is a valid velvet. It is able to do that as it gets notified for every new block seen during the synchronisation. When a new block appears, it gets informed about the block id and the interlinks included in the block. It keeps a running interlink in the same fashion the interlinker does so because the blocks events happen in-order it can check whether its running interlink matches the ones included in the block. In case there's a match the block is marked as a valid velvet and the running interlink is updated so that RealLink can be ready to process the next block.
 
 \begin{lstlisting}[language=Javascript]
@@ -145,7 +144,7 @@ module.exports = class RealLink {
 };
 \end{lstlisting}
 
-\subsection{Handling Merkle Blocks Redux}
+\section{Handling Merkle Blocks Redux}
 All information regarding the chain is sorted in a \code{VelvetChain}. A \code{VelvetChain} is the main entrypoint for block events. It is the single source of truth about the blockchain. When there is a new block, the whole block is associated with its id for later lookup, and its height is also recorded. It then gathers the block's interlink commitments and forwards them as a new event to \code{realLink}.
 
 \begin{lstlisting}[language=Javascript]
@@ -176,7 +175,7 @@ All information regarding the chain is sorted in a \code{VelvetChain}. A \code{V
   // ...
 \end{lstlisting}
 
-\subsection{Following Up}
+\section{Following Up}
 We implement the \code{followUp} algorithm as described in Algorithm~\ref{alg.nipopow-velvet-follow}. \code{followUp} acts on a \code{VelvetChain} and requires a \code{newerBlockId} which is equivalent to $B$ and $\mu$.
 
 We also see use of the \code{levelledPrev} function. \code{levelledPrev}, given a block id and a level will attempt to cross the interlink pointer at the requested level. If the block is not a velvet block it will fail and just return the \code{previd}.
@@ -202,7 +201,7 @@ A departure from the exact algorithm is that in our implementation we don't retu
   }
 \end{lstlisting}
 
-\subsection{Finding the Velvet Upchain}
+\section{Finding the Velvet Upchain}
 Utilizing the \code{followUp} algorithm to implement Algorithm~\ref{alg.nipopow-velvet-upchain} is also pretty straightforward. However instead of only $\chain \upchain^\mu$ we would like to implement $\chain\upchain^\mu\{B:\}$ as this is needed by the prover. Programmatically we reference $B$ by its id as  \code{leftBlockId}. The original algorithm repeatedly calls to \code{followUp} until it has reached the genesis, which in code can be optimized away as we know that we only need blocks after (and including) $B$. This is why we \code{followUp} until $B$ only, and take care of the special case where $B$ is not a $\mu$ superblock. We look for the path from \code{followUp} for any blocks which are left of $B$ in the chain. If that is the case, the algorithm only keeps the part of the path which is right of $B$, and $B$ if it is included in the path and then exits.
 
 \begin{lstlisting}[language=Javascript]
@@ -252,7 +251,7 @@ Utilizing the \code{followUp} algorithm to implement Algorithm~\ref{alg.nipopow-
   }
 \end{lstlisting}
 
-\subsection{Crafting Suffix Proofs}
+\section{Crafting Suffix Proofs}
 Using these primitives we can now move on to creating our first proofs. The interface implemented allows us to directly translate the pseudocode shown in Algorithm~\ref{alg.nipopow-velvet-prover}. The code will first initialize the two parts of the proof, \code{pi} and \code{chi} to be empty. Then it will pick $max\mu$ to be the level of the rightmost stable block, $\chain[-k]$, with $B$ initially set to the genesis block, $G$. Then for each level from $max\mu$ up to and including 0, it utilizes \code{findVelvetUpchain} to get the velvet upchain from the rightmost stable block up to and including $B$. If the $\mu$ superblocks of the chain are more than $m$, the path returned is included and $B$ is set to the $m$-th rightmost $\mu$ superblock of the path.
 
 \begin{lstlisting}[language=Javascript]
@@ -297,7 +296,7 @@ function suffixProof({
 }
 \end{lstlisting}
 
-\subsection{Following Down}
+\section{Following Down}
 %  -----      -----
 %            +
 %           +
@@ -333,7 +332,7 @@ function followDown(C: VelvetChain, hi: BlockId, lo: BlockId) {
 
 Following down is not enough to promote an existing suffix proof to a traversable infix proof as we will see now.
 
-\subsection{Going Back}
+\section{Going Back}
 %  -----A     C----
 %       |    /
 %       |   /
@@ -364,7 +363,7 @@ function goBack(C: VelvetChain, lo: BlockId, hi: BlockId) {
 }
 \end{lstlisting}
 
-\subsection{Crafting Infix Proofs}
+\section{Crafting Infix Proofs}
 Using these tools we are able to craft our infix proofs. The implementation works only for a single block of interest, $B$, but can be easily extended to multiple such blocks. It is assumed that the infix predicate depends only on block header data. The algorithm starts by creating a standard suffix proof. In case the suffix proof already contains the block of interest the suffix proof is enough and can be returned. Otherwise, it will find the blocks in the proof before and after $B$: $A$ and $C$. Then the proof returned will be a concatenation of the following:
 
 \begin{itemize}
@@ -411,14 +410,14 @@ function infixProof({
 }
 \end{lstlisting}
 
-\subsection{Type Safety}
+\section{Type Safety}
 To ensure code quality we opted to use Flow~\cite{flow}. Flow allowed us to have type safety while keeping all the good characteristics of JavaScript. Unfortunately this introduced a couple of complications.
 
 One is that our source files are not valid JavaScript anymore. In order to run our code we need to pass it through a pre-processor like Babel which emits clean JavaScript that then Node can run.
 
 Another is that all the external libraries we use, including bcash are not written including Flow types. Flow does provide a repository with type definitions for popular packages, however due to the niche category of our dependencies only a few were covered. This meant that the burden was on us to write type definitions for our dependencies. We had to manually write type definitions for bcash and buffer-map. Thankfully, there is previous work~\footnote{Available at \url{https://github.com/OrfeasLitos/TrustIsRisk.js/blob/247c8b182f5bb4bed11df0d3b9136a3e27848798/flow-typed/npm/bcoin_vx.x.x.js}} on type definitions for bcoin which we were able to utilize and extend since the APIs are really similar as bcash is a fork of bcoin.
 
-\subsection{Testing}
+\section{Testing}
 Due to the real-time and asynchronous nature of the prover it's important that our implementation is resilient and bug-free. In order to assert that the code has been thoroughly unit tested, boasting a code coverage of $90\%$ as shown in Figure~\ref{fig:test-coverage}. The tests are written and run with Jest~\cite{jest}. There are also integration tests using real-world data.
 
 \pngfigure{test-coverage}{Snapshot from the test coverage report for the prover codebase.}
