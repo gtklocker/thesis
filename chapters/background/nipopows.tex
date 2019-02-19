@@ -161,4 +161,41 @@ For the consumer of such data, the only difference is that they have to look ins
 
 Such forks come at the cost of making such transactions, because the user who makes the fork needs to pay transaction fees every time they wish to add data to the blockchain.
 
-For our application, we implemented a User-Activated Velvet Fork in order to add the interlink data structure to Bitcoin Cash blocks. Since Bitcoin Cash has very low fees, a projection of running such a fork comes at around 10€/month.
+\subsection{Velvet NIPoPoWs}
+Since anyone can post such transactions on the blockchain, we have to make sure that the commitment is actually true before we can use it. In order to do that we maintain our own version of the interlink for each block which we know is correct called $\sf realLink$. Then for every block, we compare its commitments (there may be many) with the Merkle Tree root of our $\sf realLink$. If there is a valid commitment we say that the block has a valid interlink. We store the full interlink as $\sf realLink[id(block)]$.
+
+We already know how it's essential that our proof forms a blockchain that can be traversed from start to end. In order to make our proof traversable, whenever we include a block we have to make sure it connects validly to the previous one either by (a) using the regular $\sf previd$ inside the block or (b) using a valid interlink. If we use the $\sf previd$ to link back to the previous block then all the information someone needs to verify the traversability is already there and we don't need to add anything extra. In the case we use the interlink however, we need to provide the Merkle Tree proofs for:
+
+\begin{itemize}
+  \item The transaction containing the valid interlink commitment.
+  \item The interlink level we use for the connection.
+\end{itemize}
+
+If our chain is not traversable the proof is automatically invalid.
+
+We'll now look at the concrete implementation of the prover.
+
+\subsection{Invalid Interlink Handling}
+The original NIPoPoWs paper~\cite{nipopows} gives us some insight into how to handle blocks with invalid interlinks. Let's look at where we need to make changes starting with suffix proofs.
+
+For suffix proofs we need a way to obtain the upchain of a chain, denoted as $\chain\upchain^\mu$. We will now define a procedure to programatically obtain the upchain of a chain called $\sf find \chain\upchain^\mu$.
+
+\subsubsection{followUp}
+$\sf followUp$ takes a block $b$ and a level $\mu$ as parameters. Starting from $b$ it traverses the chain until it reaches another block of level $\mu$ called $B$. In doing so, it is only allowed to use valid pointers. It will only follow a pointer from a block's interlink at level $\mu$ if there is a valid interlink in that block. Otherwise, the only option is to follow the previous block pointer ($\sf previd$). Once $B$ is reached, it is returned alongside the blocks that were traversed as a blockset called $\sf aux$.
+
+\input{algorithms/alg.nipopow-velvet-follow.tex}
+
+%TODO figure with straight and dropdown cases
+
+\subsubsection{find$\chain\upchain^\mu$}
+Now that we have a way to go back on a level, we can utilize it to construct the entire traversable level $\mu$ up to block $b$, starting from the end of the chain $\chain[-1]$: this is what ${\sf find \chain\upchain^\mu}(b)$ accomplishes. It works by repeatedly calling $\sf followUp$ on the oldest block it has and including the result in its final chain.
+
+\input{algorithms/alg.nipopow-velvet-upchain.tex}
+
+\subsubsection{Velvet Infix Proofs}
+
+The infix prover also changes to account for invalid or nonexistent interlinks. On \textsf{followDown} we have to make sure that any interlinks we use are valid. Thus, for any block with an invalid interlink we are forced to use its \textsf{previd} instead to find its previous block, in hopes that the previous block will contain a usable interlink.
+
+Another problem is that our block of interest may have an invalid interlink, thus it is not guaranteed that \textsf{followDown} will be enough. To mitigate this, we make sure to create a valid path of valid interlinks back to our suffix proof block, with a procedure called \textsf{goBack}, seen in Algorithm \ref{alg.nipopow-velvet-infix-go-back}, which is very works similarly to \textsf{followDown}, but instead of attempting to downgrade to lower levels it attempts to upgrade to higher levels.
+
+\input{algorithms/alg.nipopow-velvet-infix-go-back.tex}
