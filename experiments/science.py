@@ -1,4 +1,5 @@
 from hashlib import sha256, scrypt
+from concurrent.futures import ThreadPoolExecutor
 import math
 import itertools
 import struct
@@ -23,9 +24,22 @@ def hdrs_from_file(file_name):
                 break
             yield hdr
 
+def chunk(iterable, n, fillvalue=None):
+    "Collect data into fixed-length chunks or blocks"
+    # grouper('ABCDEFG', 3, 'x') --> ABC DEF Gxx"
+    args = [iter(iterable)] * n
+    return zip(*args)
+
+POOL_SIZE = 24
+
 def block_ids_from_file(file_name, hdr_to_id=bitcoin_hdr_to_id):
-    for hdr in hdrs_from_file(file_name):
-        yield hdr_to_id(hdr)
+    with ThreadPoolExecutor(POOL_SIZE) as p:
+        i = 0
+        for hdr_chunk in chunk(hdrs_from_file(file_name), POOL_SIZE):
+            i += 1
+            if i % 10000 == 0:
+                print(i)
+            yield from p.map(hdr_to_id, hdr_chunk)
 
 def level(block_id, target=None):
     target = BITCOIN_TARGET if target is None else target
