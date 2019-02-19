@@ -10,5 +10,5 @@ if __name__ == "__main__":
             [column_for_levels(lvls)
                 for lvls in [bitcoin_core_levels(), bitcoin_cash_levels()]]#, litecoin_levels()]]
             , axis=1, keys=["Bitcoin", "Bitcoin Cash"])#, "Litecoin"])
-    df.plot(logy=True).set(ylabel="interlink size", xlabel="block height")
+    df.plot().set(ylabel="interlink size", xlabel="block height")
     plt.show()
