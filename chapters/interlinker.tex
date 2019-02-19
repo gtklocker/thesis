@@ -501,3 +501,5 @@ We call our construction a \textit{block set} construction, because each block i
 \pdffigure{interlink-proof-savings-from-blockset}{Interlink inclusion proof savings by utilizing the block set construction.}
 
 An example of how a block list can end up containing many duplicates is not difficult to imagine. Suppose a very high-level $\mu$-superblock is mined, and that for some period after that, at best $(\mu-\lambda)$-superblocks are mined. For that period, the block list will contain $\lambda$ duplicates.
+
+It is important that the leafs in the block set are consistently ordered, so that it can be easy for provers to verify the included commitment is correct. An option is ordering by value, where the leafs are in ascending or descending block ID order. Another option is ordering by level, where the block IDs are in order from level $0$ to $\infty$ as usual, but duplicates are eliminated. For both cases, the genesis id is always assumed to be included at a specific location, either at the beginning or the end.
