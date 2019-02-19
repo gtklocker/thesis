@@ -1,7 +1,7 @@
 from science import *
 
 def column_for_levels(levels):
-    return pd.DataFrame(levels).cummax()[0]
+    return pd.DataFrame(levels)[0]#.cummax()[0]
 
 if __name__ == "__main__":
     import pandas as pd
