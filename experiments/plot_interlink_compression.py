@@ -19,7 +19,10 @@ def columns_for_sizes(sizes):
 
 def plot_commitment_comparison(hdr_file):
     df = columns_for_sizes(interlink_sizes(hdr_file)).rolling(1000).mean()
-    df.plot()
+    df \
+        .rename(columns={"blocklist": "Block List", "blockset": "Block Set"}) \
+        .plot() \
+        .set(ylabel="# of block ids in interlink vector", xlabel="block height")
     plt.show()
 
 def df_from_file(hdr_file):
@@ -45,4 +48,5 @@ def plot_proof_cmp(hdr_file):
 if __name__ == "__main__":
     plot_proof_savings("BitcoinCash-Mainnet.bin")
     plot_proof_cmp("BitcoinCash-Mainnet.bin")
+    plot_commitment_comparison("BitcoinCash-Mainnet.bin")
     plt.show()
