@@ -25,7 +25,7 @@ def hdrs_from_file(file_name):
 
 BLOCK_ID_SIZE = 32
 
-def block_ids_directly(file_name):
+def blkids_from_blkid_file(file_name):
     with open(file_name, "rb") as f:
         while True:
             blkid = f.read(BLOCK_ID_SIZE)
@@ -33,12 +33,9 @@ def block_ids_directly(file_name):
                 return
             yield blkid
 
-def block_ids_from_file(file_name, hdr_to_id=bitcoin_hdr_to_id):
-    if "-ids" in file_name:
-        yield from block_ids_directly(file_name)
-    else:
-        for hdr in hdrs_from_file(file_name):
-            yield hdr_to_id(hdr)
+def blkids_from_hdr_file(file_name, hdr_to_id=bitcoin_hdr_to_id):
+    for hdr in hdrs_from_file(file_name):
+        yield hdr_to_id(hdr)
 
 def level(block_id, target=None):
     target = BITCOIN_TARGET if target is None else target
@@ -48,8 +45,8 @@ def level(block_id, target=None):
 
 HEADER_SIZE = 80
 
-def levels_for_file(file_name, hdr_to_id=bitcoin_hdr_to_id, target=None):
-    for blkid in block_ids_from_file(file_name, hdr_to_id):
+def levels_for_file(file_name, blkids_src=blkids_from_blkid_file, hdr_to_id=bitcoin_hdr_to_id, target=None):
+    for blkid in blkids_src(file_name, hdr_to_id):
         yield level(blkid[::-1].hex(), target)
 
 def bitcoin_cash_levels():
@@ -57,7 +54,7 @@ def bitcoin_cash_levels():
 def bitcoin_core_levels():
     yield from levels_for_file("BitcoinCore-Mainnet.bin")
 def litecoin_levels():
-    yield from levels_for_file("Litecoin-Mainnet-ids.bin", litecoin_hdr_to_id, LITECOIN_TARGET)
+    yield from levels_for_file("Litecoin-Mainnet-ids.bin", blkids_src=blkids_from_blkid_file, target=LITECOIN_TARGET)
 
 def bits_to_target(bits):
     # bits to target
