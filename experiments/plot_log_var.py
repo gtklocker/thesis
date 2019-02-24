@@ -23,11 +23,15 @@ def column_for_levels(levels):
 if __name__ == "__main__":
     import pandas as pd
     import matplotlib.pyplot as plt
+    import numpy as np
+
+    cols = [column_for_levels(lvls)
+            for lvls in [bitcoin_core_log_var(), bitcoin_cash_log_var()]]
+    max_col = sorted(cols, key=lambda col: -col.index.size)[0]
+    log_col = pd.Series(np.log2(1 + max_col.index.values))
 
     df = pd.concat(
-            [column_for_levels(lvls)
-                for lvls in [bitcoin_core_log_var(), bitcoin_cash_log_var()]]
-            , axis=1, keys=["Bitcoin", "Bitcoin Cash"]).astype(float)
-    print(df)
+            [*cols, log_col]
+            , axis=1, keys=["Bitcoin", "Bitcoin Cash", "log(x)"]).astype(float)
     df.plot(logx=True).set(ylabel="|interlink| + log2(vartarget / genesistarget)", xlabel="block height")
     plt.show()
