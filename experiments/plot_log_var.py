@@ -26,13 +26,13 @@ if __name__ == "__main__":
     import numpy as np
 
     cols = [column_for_levels(lvls)
-            for lvls in [bitcoin_core_log_var(), bitcoin_cash_log_var()]]
+            for lvls in [bitcoin_cash_log_var(), bitcoin_core_log_var()]]
     max_col = sorted(cols, key=lambda col: -col.index.size)[0]
     log_col = pd.Series(np.log2(1 + max_col.index.values))
 
     df = pd.concat(
             [*cols, log_col]
-            , axis=1, keys=["Bitcoin", "Bitcoin Cash", r"$log_2(x)$"]).astype(float)
+            , axis=1, keys=["Bitcoin Cash", "Bitcoin", r"$log_2(x)$"]).astype(float)
 
     ylabel = r"$|interlink| + log_2(\frac{\sf variableTarget}{\sf genesisTarget})$"
     df.plot(logx=True).set(ylabel=ylabel, xlabel="block height")
