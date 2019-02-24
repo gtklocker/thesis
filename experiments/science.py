@@ -23,9 +23,22 @@ def hdrs_from_file(file_name):
                 break
             yield hdr
 
+BLOCK_ID_SIZE = 32
+
+def block_ids_directly(file_name):
+    with open(file_name, "rb") as f:
+        while True:
+            blkid = f.read(BLOCK_ID_SIZE)
+            if len(blkid) != BLOCK_ID_SIZE:
+                return
+            yield blkid
+
 def block_ids_from_file(file_name, hdr_to_id=bitcoin_hdr_to_id):
-    for hdr in hdrs_from_file(file_name):
-        yield hdr_to_id(hdr)
+    if "-ids" in file_name:
+        yield from block_ids_directly(file_name)
+    else:
+        for hdr in hdrs_from_file(file_name):
+            yield hdr_to_id(hdr)
 
 def level(block_id, target=None):
     target = BITCOIN_TARGET if target is None else target
@@ -44,7 +57,7 @@ def bitcoin_cash_levels():
 def bitcoin_core_levels():
     yield from levels_for_file("BitcoinCore-Mainnet.bin")
 def litecoin_levels():
-    yield from levels_for_file("Litecoin-Mainnet.bin", litecoin_hdr_to_id, LITECOIN_TARGET)
+    yield from levels_for_file("Litecoin-Mainnet-ids.bin", litecoin_hdr_to_id, LITECOIN_TARGET)
 
 def bits_to_target(bits):
     # bits to target
