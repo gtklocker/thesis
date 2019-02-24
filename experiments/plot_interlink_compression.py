@@ -9,8 +9,12 @@ def interlink_sizes(hdr_file):
     blkids = block_ids_from_file(hdr_file)
     genesis = next(blkids)
     interlink = Interlink(genesis)
+    tgt = BITCOIN_TARGET
+    if "litecoin" in hdr_file.lower():
+        print("using litecoin target")
+        tgt = LITECOIN_TARGET
     for blkid in blkids:
-        lvl = level(blkid[::-1].hex())
+        lvl = level(blkid[::-1].hex(), tgt)
         interlink = interlink.update(blkid, lvl)
         yield (len(interlink.as_array()), len(set(interlink.as_array())))
 
@@ -48,5 +52,5 @@ def plot_proof_cmp(hdr_file):
 if __name__ == "__main__":
     plot_proof_savings("BitcoinCash-Mainnet.bin")
     plot_proof_cmp("BitcoinCash-Mainnet.bin")
-    plot_commitment_comparison("BitcoinCash-Mainnet.bin")
+    plot_commitment_comparison("Litecoin-Mainnet-ids.bin")
     plt.show()
