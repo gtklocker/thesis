@@ -32,6 +32,8 @@ if __name__ == "__main__":
 
     df = pd.concat(
             [*cols, log_col]
-            , axis=1, keys=["Bitcoin", "Bitcoin Cash", "log(x)"]).astype(float)
-    df.plot(logx=True).set(ylabel="|interlink| + log2(vartarget / genesistarget)", xlabel="block height")
+            , axis=1, keys=["Bitcoin", "Bitcoin Cash", r"$log_2(x)$"]).astype(float)
+
+    ylabel = r"$|interlink| + log_2(\frac{\sf variableTarget}{\sf genesisTarget})$"
+    df.plot(logx=True).set(ylabel=ylabel, xlabel="block height")
     plt.show()
