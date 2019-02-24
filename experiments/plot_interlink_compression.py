@@ -5,8 +5,7 @@ import numpy as np
 from science import *
 from interlink import Interlink
 
-def interlink_sizes(data_file, blkids_src=blkids_from_hdr_file, target=BITCOIN_TARGET):
-    blkids = blkids_src(data_file)
+def interlink_sizes(blkids, target=BITCOIN_TARGET):
     genesis = next(blkids)
     interlink = Interlink(genesis)
     for blkid in blkids:
@@ -40,10 +39,10 @@ def plot_proof_cmp(df):
         .set(ylabel="# of block ids in interlink inclusion proof", xlabel="block height")
 
 if __name__ == "__main__":
-    bitcoin_cash_df = df_for_interlink_sizes("BitcoinCash-Mainnet.bin")
-    bitcoin_core_df = df_for_interlink_sizes("BitcoinCore-Mainnet.bin")
-    litecoin_df = df_for_interlink_sizes("Litecoin-Mainnet-ids.bin", blkids_src=blkids_from_blkid_file, target=LITECOIN_TARGET)
-    #plot_proof_savings(bitcoin_cash_df)
-    #plot_proof_cmp("BitcoinCash-Mainnet.bin")
-    plot_commitment_comparison(litecoin_df)
+    bitcoin_cash_df = df_for_interlink_sizes(bitcoin_cash_blkids())
+    bitcoin_core_df = df_for_interlink_sizes(bitcoin_core_blkids())
+    litecoin_df = df_for_interlink_sizes(litecoin_blkids(), target=LITECOIN_TARGET)
+    plot_proof_savings(bitcoin_cash_df)
+    plot_proof_cmp(bitcoin_cash_df)
+    plot_commitment_comparison(bitcoin_cash_df)
     plt.show()
