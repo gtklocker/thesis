@@ -25,24 +25,24 @@ def plot_commitment_comparison(df):
     df \
         .rename(columns={"blocklist": "Block List", "blockset": "Block Set"}) \
         .plot() \
-        .set(ylabel="# of block ids in interlink vector", xlabel="block height")
+        .set(ylabel=r"\# of block ids in interlink vector", xlabel="block height")
 
 def plot_proof_savings(df):
     df['blockset_proof_savings'] = 1-df['blockset_proof']/df['blocklist_proof']
     (df['blockset_proof_savings'] * 100).rolling(2000).mean().plot() \
-        .set(ylabel="interlink inclusion proof savings (%)", xlabel="block height")
+        .set(ylabel=r"interlink inclusion proof savings (\%)", xlabel="block height")
 
 def plot_proof_cmp(df):
     df[['blocklist_proof', 'blockset_proof']] \
         .rename(columns={"blocklist_proof": "Block List", "blockset_proof": "Block Set"}) \
         .rolling(2000).mean().plot() \
-        .set(ylabel="# of block ids in interlink inclusion proof", xlabel="block height")
+        .set(ylabel=r"\# of block ids in interlink inclusion proof", xlabel="block height")
 
 if __name__ == "__main__":
     bitcoin_cash_df = df_for_interlink_sizes(bitcoin_cash_blkids())
-    bitcoin_core_df = df_for_interlink_sizes(bitcoin_core_blkids())
-    litecoin_df = df_for_interlink_sizes(litecoin_blkids(), target=LITECOIN_TARGET)
+    #bitcoin_core_df = df_for_interlink_sizes(bitcoin_core_blkids())
+    #litecoin_df = df_for_interlink_sizes(litecoin_blkids(), target=LITECOIN_TARGET)
     plot_proof_savings(bitcoin_cash_df)
-    plot_proof_cmp(bitcoin_cash_df)
     plot_commitment_comparison(bitcoin_cash_df)
+    plot_proof_cmp(bitcoin_cash_df)
     plt.show()

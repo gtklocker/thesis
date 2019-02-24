@@ -79,3 +79,14 @@ def header_to_bits(hdr):
 
 def header_to_target(hdr):
     return bits_to_target(header_to_bits(hdr))
+
+from matplotlib import rc
+import matplotlib.pyplot as plt
+plt.rcParams["text.latex.preamble"] = [r"\usepackage{lmodern}"]
+rc('text', usetex=True)
+rc(
+    'font',
+    family='serif',
+    serif=['Computer Modern Roman'],
+    monospace=['Computer Modern Typewriter']
+)
