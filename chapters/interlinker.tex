@@ -492,6 +492,11 @@ In order to estimate how our deployment would perform in time we can assume that
 
 \pdffigure{bitcoin-mainnet-interlink-sizes}{Size of the interlink assuming the real genesis on Bitcoin and Bitcoin Cash mainnet.}
 
+\subsection{Methodology}
+For our estimations it was required that we obtained the corresponding chains. However, obtaining the full chains as we have seen is cumbersome, as hundreds of gigabytes of data need to be downloaded for every chain. We noticed that for our purposes only the headers were required, but even with this observation there was still no easy way to obtain the header chain for major cryptocurrencies. To this end we implemented a utility in Haskell called \code{blockheaders-dl}
+\footnote{The code is available at \url{https://github.com/gtklocker/blockheaders-dl}}.
+The utility connects to Electrum servers corresponding to the requested cryptocurrency and repeatedly queries the headers until all the headers are downloaded. Bitcoin, Bitcoin Cash and Litecoin are currently supported. With this utility we were able to download and process all these blockchains in a few minutes, whereas synchronizing full nodes for each would take more than a week.
+
 \section{Interlink Compression}
 We will now revisit the interlink encoding. Recall that we created the interlink encoding by creating a Merkle Tree with the interlink elements as its leafs and taking its root. We call this the \textit{block list} construction. During our deployment on the Bitcoin Cash network it became evident that an interlink block list construction contained lots of repetition. This repetition is not a problem in the interlink encoding itself, as it is constant. However if for example half the elements of a block list are duplicates then the Merkle Tree would be one level higher and any inclusion proof would take up one more item than if the leafs did not contain duplicates.
 
