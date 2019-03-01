@@ -338,7 +338,12 @@ Following down is not enough to promote an existing suffix proof to a traversabl
 %       |   /
 %       \++B
 
-Suppose we have a suffix proof and we select two blocks, $A$ and $C$. These blocks are selected so that they are adjacent in the proof and that $B$, our block of interest, is contained between them in the underlying blockchain. Also, $C$ should be right of $A$ to avoid ambiguity. By following down we obtain a traversable path from $C$ to $B$. If we augment a suffix proof with this path, the result may not be traversable, as we have no guarantee that there is a valid path from $B$ to $A$. In order for our final proof to be traversable we have to ensure a valid path between those two blocks.
+
+Something the original NIPoPoWs paper doesn't address is that our block of interest may have an invalid interlink, thus it is not guaranteed that \textsf{followDown} will be enough. To mitigate this, we make sure to create a valid path of valid interlinks back to our suffix proof block, with a procedure called \textsf{goBack}, seen in Algorithm \ref{alg.nipopow-velvet-infix-go-back}, which is very works similarly to \textsf{followDown}, but instead of attempting to downgrade to lower levels it attempts to upgrade to higher levels.
+
+\input{algorithms/alg.nipopow-velvet-infix-go-back.tex}
+
+More specifically, suppose we have a suffix proof and we select two blocks, $A$ and $C$. These blocks are selected so that they are adjacent in the proof and that $B$, our block of interest, is contained between them in the underlying blockchain. Also, $C$ should be right of $A$ to avoid ambiguity. By following down we obtain a traversable path from $C$ to $B$. If we augment a suffix proof with this path, the result may not be traversable, as we have no guarantee that there is a valid path from $B$ to $A$. In order for our final proof to be traversable we have to ensure a valid path between those two blocks.
 
 To this end we implement \code{goBack}, which mimics \code{followDown} and connects \code{lo} to \code{hi} in the same manner.
 

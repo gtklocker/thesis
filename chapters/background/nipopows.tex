@@ -195,7 +195,3 @@ Now that we have a way to go back on a level, we can utilize it to construct the
 \subsubsection{Velvet Infix Proofs}
 
 The infix prover also changes to account for invalid or nonexistent interlinks. On \textsf{followDown} we have to make sure that any interlinks we use are valid. Thus, for any block with an invalid interlink we are forced to use its \textsf{previd} instead to find its previous block, in hopes that the previous block will contain a usable interlink.
-
-Another problem is that our block of interest may have an invalid interlink, thus it is not guaranteed that \textsf{followDown} will be enough. To mitigate this, we make sure to create a valid path of valid interlinks back to our suffix proof block, with a procedure called \textsf{goBack}, seen in Algorithm \ref{alg.nipopow-velvet-infix-go-back}, which is very works similarly to \textsf{followDown}, but instead of attempting to downgrade to lower levels it attempts to upgrade to higher levels.
-
-\input{algorithms/alg.nipopow-velvet-infix-go-back.tex}
