@@ -70,6 +70,9 @@ def bitcoin_core_levels():
 def litecoin_levels():
     yield from levels_from_blkids(litecoin_blkids(), target=LITECOIN_TARGET)
 
+def bitcoin_core_headers():
+    yield from hdrs_from_file("BitcoinCore-Mainnet.bin")
+
 def bits_to_target(bits):
     # bits to target
     bitsN = (bits >> 24) & 0xff
