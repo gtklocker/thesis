@@ -15,6 +15,14 @@ def litecoin_hdr_to_id(hdr):
 BITCOIN_TARGET =  0x00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff
 LITECOIN_TARGET = 0x00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
 
+def hash_to_num(h):
+    if isinstance(h, bytes):
+        return int.from_bytes(h, 'little')
+    elif isinstance(h, str):
+        return int(block_id, 16)
+    else:
+        return h
+
 def hdrs_from_file(file_name):
     with open(file_name, "rb") as f:
         for height in itertools.count():
@@ -39,15 +47,14 @@ def blkids_from_hdr_file(file_name, hdr_to_id=bitcoin_hdr_to_id):
 
 def level(block_id, target=None):
     target = BITCOIN_TARGET if target is None else target
-    if isinstance(block_id, str):
-        block_id = int(block_id, 16)
+    block_id = hash_to_num(block_id)
     return -int(math.ceil(math.log(float(block_id) / target, 2)))
 
 HEADER_SIZE = 80
 
 def levels_from_blkids(blkids, target=None):
     for blkid in blkids:
-        yield level(blkid[::-1].hex(), target)
+        yield level(blkid, target)
 
 def bitcoin_cash_blkids():
     yield from blkids_from_hdr_file("BitcoinCash-Mainnet.bin")

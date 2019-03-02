@@ -9,7 +9,7 @@ def interlink_sizes(blkids, target=BITCOIN_TARGET):
     genesis = next(blkids)
     interlink = Interlink(genesis)
     for blkid in blkids:
-        lvl = level(blkid[::-1].hex(), target)
+        lvl = level(blkid, target)
         interlink = interlink.update(blkid, lvl)
         yield (len(interlink.as_array()), len(set(interlink.as_array())))
 

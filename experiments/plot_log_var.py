@@ -9,7 +9,7 @@ def log_var_for_file(file_name, hdr_to_id=bitcoin_hdr_to_id, target=None):
     for hdr in blkhdrs:
         blkid = hdr_to_id(hdr)
         target = header_to_target(hdr)
-        interlink_size = max(interlink_size, level(blkid[::-1].hex()) + 1)
+        interlink_size = max(interlink_size, level(blkid) + 1)
         yield interlink_size + math.log2(float(target)/float(genesis_target))
 
 def bitcoin_cash_log_var():
