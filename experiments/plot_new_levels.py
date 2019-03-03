@@ -10,40 +10,59 @@ def level_var(hdr):
     target = header_to_target(hdr)
     return level(blkid, target=target)
 
-MAX_LEVEL = 7
+MAX_LEVEL = 6
 levels_df = pd.DataFrame(bitcoin_core_headers()).applymap(level_var)[0]
 
+WINDOW_SIZE = 1000
+
 def window_size(level):
-    return 1000 * 2**level
+    return WINDOW_SIZE * 2**level + 1
+
+def levels():
+    yield from range(MAX_LEVEL+1)
 
 def windowed_counts(df):
-    old_el = 0
     counts = [0 for lvl in range(MAX_LEVEL+1)]
-    for i in range(window_size(MAX_LEVEL)):
-        if window_size(df[i]) < i:
-            counts[df[i]] += 1
-
     new_els = [window_size(lvl) for lvl in range(MAX_LEVEL+1)]
-    active_levels = set(lvl for lvl in range(MAX_LEVEL+1))
     length = len(df)
 
-    while active_levels:
-        prunable_levels = set()
-        for lvl in active_levels:
-            if new_els[lvl] >= length:
-                prunable_levels.add(lvl)
-                continue
+    max_window_size = window_size(MAX_LEVEL)
+    #print('max_window_size=%d' % max_window_size)
+    center_el = max_window_size // 2
+    #print('center_el=%d' % center_el)
 
-            if df[old_el] == lvl:
+    assert center_el + max_window_size // 2 + 1 < length
+
+    for i in range(min(length, max_window_size)):
+        lvl = df[i]
+        #print('actual level %d' % lvl)
+        for l in range(lvl+1):
+            if l <= MAX_LEVEL:
+                left_el = center_el - window_size(l) // 2
+                right_el = center_el + window_size(l) // 2
+                #print('left_el=%d, i=%d, right_el=%d' % (left_el, i, right_el))
+                if left_el <= i <= right_el:
+                    #print('pass level %d' % l)
+                    counts[l] += 1
+
+    #print({k: counts[k]/window_size(k) for k in levels()})
+    yield {k: counts[k]/window_size(k) for k in levels()}
+    while center_el + max_window_size // 2 + 1 < length:
+        for lvl in levels():
+            old_el = center_el - window_size(lvl) // 2
+            new_el = center_el + window_size(lvl) // 2 + 1
+            if df[old_el] >= lvl:
                 counts[lvl] -= 1
-            if df[new_els[lvl]] == lvl:
+            if df[new_el] >= lvl:
                 counts[lvl] += 1
-            new_els[lvl] += 1
-        active_levels -= prunable_levels
-        yield {k: counts[k] for k in range(MAX_LEVEL+1)}
-        old_el += 1
+        #print({k: counts[k]/window_size(k) for k in levels()})
+        yield {k: counts[k]/window_size(k) for k in levels()}
+        center_el += 1
 
+#fake_levels_df = pd.DataFrame([0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0, 4])[0]
+#print(fake_levels_df)
 win = pd.DataFrame(windowed_counts(levels_df), dtype='int32').fillna(0)
 win.columns = win.columns.to_series().apply(lambda mu: '%d-superblocks' % mu)
-win.plot(logy=True).set(ylabel=r"\# of superblocks", xlabel="block height")
+print(win)
+win.plot(logy=True).set(ylabel="superblock density", xlabel="block height")
 plt.show()
