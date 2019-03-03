@@ -39,12 +39,12 @@ def plot_proof_cmp(df):
         .set(ylabel=r"\# of block ids in interlink inclusion proof", xlabel="block height")
 
 if __name__ == "__main__":
-    #bitcoin_cash_df = df_for_interlink_sizes(bitcoin_cash_blkids())
+    bitcoin_cash_df = df_for_interlink_sizes(bitcoin_cash_blkids())
     #bitcoin_core_df = df_for_interlink_sizes(bitcoin_core_blkids())
-    litecoin_df = df_for_interlink_sizes(litecoin_blkids(), target=LITECOIN_TARGET)
-    plot_commitment_comparison(litecoin_df)
-    plt.show()
-    #plot_proof_savings(bitcoin_core_df)
+    #litecoin_df = df_for_interlink_sizes(litecoin_blkids(), target=LITECOIN_TARGET)
+    #plot_commitment_comparison(litecoin_df)
     #plt.show()
+    plot_proof_savings(bitcoin_cash_df)
+    plt.show()
     #plot_proof_cmp(bitcoin_core_df)
     #plt.show()
