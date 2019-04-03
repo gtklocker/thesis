@@ -65,8 +65,9 @@ def bounds_for_level(lvl):
     return (expectation - std, expectation + std)
 
 def draw_expectations(ax):
-    for (bottom, top) in map(bounds_for_level, levels()):
-        ax.axhspan(bottom, top, facecolor='0.5', alpha=0.15)
+    for lvl in levels():
+        bottom, top = bounds_for_level(lvl)
+        ax.axhspan(bottom, top, facecolor=ax.get_lines()[lvl].get_color(), alpha=0.35)
 
 win = pd.DataFrame(windowed_counts(levels_df), dtype='int32').fillna(0)
 win.columns = win.columns.to_series().apply(lambda mu: '%d-superblocks' % mu)
