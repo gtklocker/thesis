@@ -53,10 +53,25 @@ def windowed_counts(df):
         yield {k: counts[k]/window_size(k) for k in levels()}
         center_el += 1
 
+def binomial_expectation(n, p):
+    return n*p
+
+def binomial_std(n, p):
+    return math.sqrt(n*p*(1-p))
+
+def bounds_for_level(lvl):
+    expectation = binomial_expectation(window_size(lvl), 2**(-lvl)) / window_size(lvl)
+    std = binomial_std(window_size(lvl), 2**(-lvl)) / window_size(lvl)
+    return (expectation - std, expectation + std)
+
+def draw_expectations(ax):
+    for (bottom, top) in map(bounds_for_level, levels()):
+        ax.axhspan(bottom, top, facecolor='0.5', alpha=0.15)
 
 win = pd.DataFrame(windowed_counts(levels_df), dtype='int32').fillna(0)
 win.columns = win.columns.to_series().apply(lambda mu: '%d-superblocks' % mu)
 ax = win.plot(logy=True)
+draw_expectations(ax)
 ax.set(ylabel="superblock density", xlabel="block height")
 ax.set_yscale('log', basey=2)
 plt.show()
