@@ -1,3 +1,5 @@
+\newif\ifuniversity
+% \universitytrue
 \documentclass{report}
 \usepackage{preamble}
 
@@ -18,6 +20,7 @@
   Finally, we provide a working implementation of a \textit{prover}, also released as open-source. The prover enables users to generate suffix and infix proofs on any Bitcoin-based chain which has been velvet forked using our method, including the Bitcoin Cash testnet, where our fork has been deployed. The proofs generated can then be used for super-lite clients, cross chain transactions, and more.
 \end{abstract}
 
+\ifuniversity
 \chapter*{Acknowledgements}
 Two people were key in getting me interested in algorithms, programming and computer science when I was still in high-school: Aleksis Brezas and Dionysis Zindros. I am indebted to both of them for the time they spent teaching me back then, and I couldn't have asked for more sincere and capable people to surround myself with. Our friendship has helped me grow both as a scientist and as a person. I also wish to thank Dimitris Glezos for believing in me when I was younger and indirectly introducing me to these two.
 
@@ -32,6 +35,8 @@ I am grateful to have had some great professors to teach me during my time as an
 Finally, I thank my family for raising me and for continuously supporting me during my studies. It goes without saying that I would not be where I am today without them.
 
 Thank you all. It has been an incredible journey and it would not be the same without any one of you.
+\else
+\fi
 
 \thispagestyle{empty}
 \newpage
